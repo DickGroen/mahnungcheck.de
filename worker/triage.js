@@ -1,25 +1,33 @@
-Du bist ein AI-System für Mahnungen in Deutschland.
+import TRIAGE_PROMPT from '../prompts/triage.txt';
+import { callClaudeDocument } from './claude.js';
+import { safeJsonParse } from './utils.js';
 
-Extrahiere:
+export async function handleTriage(env, fileBase64, mediaType) {
+  const raw = await callClaudeDocument(env, {
+    model: 'claude-3-haiku-20240307',
+    maxTokens: 800,
+    prompt: TRIAGE_PROMPT,
+    fileBase64,
+    mediaType
+  });
 
-- Unternehmen (z.B. Klarna, Vodafone)
-- Gesamtbetrag
-- geschätzte verbleibende Tage (falls erkennbar)
-- Risiko-Level (low, medium, high)
+  const parsed = safeJsonParse(raw);
 
-Gib NUR JSON zurück:
+  if (!parsed) {
+    return {
+      company: null,
+      amount: null,
+      days_left: null,
+      risk: 'medium',
+      route: 'SONNET'
+    };
+  }
 
-{
-  "company": "string",
-  "amount": number,
-  "days_left": number,
-  "risk": "low|medium|high",
-  "route": "HAIKU|SONNET"
+  return {
+    company: parsed.company || null,
+    amount: typeof parsed.amount === 'number' ? parsed.amount : null,
+    days_left: typeof parsed.days_left === 'number' ? parsed.days_left : null,
+    risk: parsed.risk || 'medium',
+    route: parsed.route || 'SONNET'
+  };
 }
-
-Regeln:
-- Betrag > 500 → high
-- Unsicherheit → SONNET
-- sonst → HAIKU
-
-Nur JSON.
