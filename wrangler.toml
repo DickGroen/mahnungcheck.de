@@ -6,4 +6,3 @@ compatibility_date = "2024-12-01"
 type = "Text"
 globs = ["prompts/**/*.txt"]
 fallthrough = true
-
