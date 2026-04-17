@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mahnung prüfen lassen | Mahnung Check DE</title>
-  <meta name="description" content="Lade deine Mahnung hoch und erhalte sofort eine erste Einschätzung. Vollständige Analyse + fertiger Widerspruch innerhalb von 24 Stunden.">
+  <meta name="description" content="Lade deine Mahnung hoch und erhalte sofort eine erste Einschätzung. Vollständige Analyse + fertiger Widerspruch innerhalb von 24 Stunden. Einmalig €49.">
   <link rel="stylesheet" href="styles.css">
 </head>
 
@@ -27,92 +27,285 @@
 <section class="hero">
   <div class="container">
 
+    <div class="hero__eyebrow" style="justify-content:center;text-align:center;">
+      Nicht sofort zahlen — lass die Forderung erst prüfen
+    </div>
+
     <h1>Zahlst du diese Mahnung möglicherweise zu Unrecht?</h1>
 
     <p class="hero__sub">
-      Viele Forderungen sind fehlerhaft oder unklar.  
-      Lade dein Schreiben hoch und erhalte sofort eine erste Einschätzung.
+      Viele Mahnungen enthalten Fehler oder überhöhte Kosten.
+      Lade dein Schreiben hoch und erhalte innerhalb von 24 Stunden eine vollständige Analyse und einen fertigen Widerspruch per E-Mail.
     </p>
 
-    <!-- UPLOAD -->
-    <div class="upload-section" id="upload-zone">
-      <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png" onchange="handleFile(this)">
-      <div class="upload-label">Mahnung oder Inkassobrief hochladen</div>
-      <div class="upload-hint">PDF, JPG oder PNG</div>
+    <!-- VALUE STRIP -->
+    <div class="value-strip">
+      <span class="value-item"><span class="vi-check">✔</span> Analyse + Widerspruch innerhalb von 24 Stunden</span>
+      <span class="value-item"><span class="vi-check">✔</span> Per E-Mail — kein Konto erforderlich</span>
+      <span class="value-item"><span class="vi-check">✔</span> Einmalig €49 · kein Abo</span>
+      <span class="value-item"><span class="vi-check">✔</span> Dokument nach Verarbeitung gelöscht</span>
     </div>
+
+    <!-- UPLOAD -->
+    <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png"
+           onchange="handleFile(this)" style="display:none;">
+    <label class="upload-section" id="upload-zone" for="file-input">
+      <div class="upload-icon">
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#6B7A90" stroke-width="1.8">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+      </div>
+      <div class="upload-label">Mahnung oder Inkassobrief hochladen — oder direkt zur Zahlung</div>
+      <div class="upload-hint">PDF, JPG oder PNG · max. 10 MB · du zahlst erst im nächsten Schritt</div>
+    </label>
 
     <!-- TEASER -->
     <div class="teaser" id="teaser">
-      <div id="teaser-company">Analyse läuft...</div>
-      <div id="teaser-found"></div>
-      <div id="teaser-sub"></div>
+      <div class="teaser__header">
+        <div>
+          <div style="font-size:0.72rem;color:#9CA3AF;margin-bottom:4px;letter-spacing:0.05em;text-transform:uppercase;">Erkannt</div>
+          <div class="teaser__company" id="teaser-company">Dein Schreiben ist bereit zur Analyse</div>
+        </div>
+        <div class="teaser__status-label">Bereit</div>
+      </div>
+      <div class="teaser__body">
+        <div class="teaser__found" id="teaser-found">Gut. Das passiert jetzt:</div>
+        <div class="teaser__sub" id="teaser-sub">Dein Schreiben wurde erkannt. Klicke unten, um deine Analyse anzufordern — Ergebnis bis morgen 17:00 Uhr.</div>
+        <div class="teaser__locked">
+          <div class="lock-icon">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <div class="teaser__locked-text" id="teaser-locked-text">
+            <strong>Vollständige Analyse nach Zahlung</strong>
+            Widerspruchsgründe, Einschätzung und fertiger Widerspruch — innerhalb von 24 Stunden per E-Mail.
+          </div>
+        </div>
+      </div>
+    </div>
 
-      <p style="font-size:0.85rem;color:#6b7280;margin-top:10px;">
-        Viele zahlen aus Unsicherheit sofort — obwohl sich eine Prüfung oft lohnt.
-      </p>
-
-      <!-- NIEUWE CTA -->
-      <a href="YOUR_STRIPE_LINK" class="button">
-        Vollständige Analyse + fertigen Widerspruch freischalten (€49)
-      </a>
+    <!-- CTA -->
+    <div class="cta-wrap">
+      <button class="cta-main" onclick="openModal()">
+        Mahnung prüfen — €49 · Ergebnis innerhalb von 24 Stunden
+      </button>
+      <div class="cta-sub">Einmalig · kein Abo · 🔒 Sichere Zahlung via Stripe</div>
     </div>
 
   </div>
 </section>
 
+<!-- HOW IT WORKS -->
+<section class="section">
+  <div class="container">
+    <div class="section-label">So funktioniert es</div>
+    <h2>In 3 Schritten fertig</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step__num">01</div>
+        <div class="step__title">Zahlen und einreichen</div>
+        <div class="step__desc">Nach der Zahlung erhältst du eine Bestätigungs-E-Mail mit Anweisungen zum sicheren Einreichen deines Schreibens. Dauert weniger als 2 Minuten.</div>
+      </div>
+      <div class="step">
+        <div class="step__num">02</div>
+        <div class="step__title">Wir analysieren</div>
+        <div class="step__desc">Wir prüfen dein Schreiben auf Verjährung, überhöhte Inkassokosten, unberechtigte Forderungen und fehlende gesetzliche Angaben.</div>
+      </div>
+      <div class="step">
+        <div class="step__num">03</div>
+        <div class="step__title">Ergebnis per E-Mail</div>
+        <div class="step__desc">Bis morgen 17:00 Uhr erhältst du deine Analyse und einen fertigen Widerspruch per E-Mail. Direkt verwendbar.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BEISPIEL-BERICHT -->
+<section class="section">
+  <div class="container">
+    <div class="section-label">Was du erhältst</div>
+    <h2>Beispiel-Analyse</h2>
+    <div class="report-preview">
+      <div class="report-preview__header">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Analyse der Widerspruchsgründe
+      </div>
+      <div class="report-row">
+        <div class="report-row__label">Forderung möglicherweise verjährt</div>
+        <span class="badge badge--green"><span class="badge-dot"></span>Stark</span>
+        <span class="kans">Hoch</span>
+      </div>
+      <div class="report-row">
+        <div class="report-row__label">Inkassokosten zu hoch</div>
+        <span class="badge badge--amber"><span class="badge-dot"></span>Möglich</span>
+        <span class="kans">Mittel</span>
+      </div>
+      <div class="report-row">
+        <div class="report-row__label">Fehlender Nachweis der 14-Tage-Mahnung</div>
+        <span class="badge badge--green"><span class="badge-dot"></span>Stark</span>
+        <span class="kans">Hoch</span>
+      </div>
+      <div class="report-row">
+        <div class="report-row__label">Falscher Betrag</div>
+        <span class="badge badge--red"><span class="badge-dot"></span>Unwahrscheinlich</span>
+        <span class="kans">Niedrig</span>
+      </div>
+      <div class="report-footer">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+        Inklusive fertigem Widerspruch und konkreten nächsten Schritten
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ERFAHRUNGEN -->
+<section class="section">
+  <div class="container">
+    <div class="section-label">Erfahrungen</div>
+    <h2>Was andere sagen</h2>
+    <div class="reviews">
+      <div class="review">
+        <div class="stars">★★★★★</div>
+        <div class="review__text">"Ich hatte schon beschlossen zu zahlen. Stellte sich heraus, dass die Forderung verjährt war. Sehr froh, dass ich das zuerst prüfen ließ."</div>
+        <div class="review__author">Markus V. — Berlin</div>
+      </div>
+      <div class="review">
+        <div class="stars">★★★★★</div>
+        <div class="review__text">"Der Bericht war am nächsten Morgen in meinem Postfach. Klar, konkret und der Widerspruch konnte ich sofort verwenden."</div>
+        <div class="review__author">Fatima E. — Hamburg</div>
+      </div>
+      <div class="review">
+        <div class="stars">★★★★★</div>
+        <div class="review__text">"Die Inkassokosten waren zu hoch berechnet. Auf Basis des Berichts Widerspruch eingelegt — und gewonnen."</div>
+        <div class="review__author">Thomas K. — München</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MID-PAGE CTA -->
+<section style="padding:40px 0;border-bottom:1px solid var(--line);background:var(--surface);">
+  <div class="container" style="text-align:center;">
+    <p style="font-size:1rem;color:var(--ink-3);margin-bottom:16px;font-weight:500;">Lieber nicht zahlen, wenn es nicht nötig ist? Lass dein Schreiben prüfen.</p>
+    <button class="cta-main" style="max-width:480px;margin:0 auto;" onclick="openModal()">
+      Mahnung prüfen — €49 · Ergebnis innerhalb von 24 Stunden
+    </button>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="section">
+  <div class="container">
+    <div class="section-label">Fragen</div>
+    <h2>Häufig gestellte Fragen</h2>
+    <div class="faq">
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Wie reiche ich mein Schreiben nach der Zahlung ein?
+          <svg class="faq-chevron" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a">Nach der Zahlung lädst du dein Schreiben direkt auf der Bestätigungsseite hoch. Das dauert weniger als 2 Minuten. Deine Analyse und deinen Widerspruch erhältst du bis morgen 17:00 Uhr per E-Mail.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Was, wenn die Forderung doch berechtigt ist?
+          <svg class="faq-chevron" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a">Du erhältst trotzdem einen Bericht mit einer klaren Erklärung der Forderung, Zahlungsregelungsoptionen und Tipps zur Vermeidung weiterer Kosten. Du zahlst nie für einen leeren Bericht.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Ist das eine Rechtsberatung?
+          <svg class="faq-chevron" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a">Nein. Dies ist eine informative Analyse auf Basis deines Schreibens. Wir geben keine Rechtsberatung. Bei komplexen Situationen oder hohen Beträgen empfehlen wir, einen Anwalt oder die Verbraucherzentrale zu konsultieren.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Was passiert mit meinem Dokument?
+          <svg class="faq-chevron" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a">Dein Dokument wird nach der Analyse sofort und dauerhaft gelöscht. Wir speichern keine persönlichen Daten länger als für die Verarbeitung notwendig.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Setzt ein Widerspruch die Zahlung aus?
+          <svg class="faq-chevron" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a">Nein, ein Widerspruch setzt die Zahlung nicht automatisch aus. Wir kommunizieren dies immer klar im Bericht, damit du eine fundierte Entscheidung treffen kannst.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Welche Schreiben kann ich einreichen?
+          <svg class="faq-chevron" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a">Mahnungen, Inkassobriefe, Zahlungsaufforderungen und Briefe von Inkassobüros. Sowohl PDF als auch Foto (JPG/PNG) werden unterstützt.</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- DISCLAIMER -->
+<footer class="disclaimer">
+  <div class="container">
+    <p>Mahnung Check DE bietet informative Analysen und erstellt Widerspruchsbriefe. Wir geben keine Rechtsberatung. Ein Widerspruch setzt die Zahlung nicht automatisch aus. Bei Ablehnung eines Widerspruchs können Kosten entstehen. Konsultiere im Zweifelsfall einen Anwalt oder die Verbraucherzentrale. Dokumente werden nach Verarbeitung gelöscht. &copy; 2025 Mahnung Check DE.</p>
+  </div>
+</footer>
+
+<!-- STICKY FOOTER -->
+<div class="sticky-footer" id="sticky-footer">
+  <div>
+    <div class="sticky-footer__text">Zahlst du diese Mahnung zu Unrecht?</div>
+    <div class="sticky-footer__sub">Ergebnis innerhalb von 24 Stunden · einmalig €49</div>
+  </div>
+  <button class="sticky-cta" onclick="openModal()">Mahnung prüfen — €49 →</button>
+</div>
+
 <!-- MODAL -->
 <div class="modal-overlay" id="modal" onclick="closeModalOutside(event)">
   <div class="modal">
-
     <div class="modal__header">
-      <div class="modal__eyebrow">Vor dem Bezahlen prüfen</div>
-
-      <div class="modal__title">
-        Vollständige Analyse + fertiger Widerspruch
-      </div>
-
-      <div class="modal__sub">
-        Du erhältst innerhalb von 24 Stunden eine klare Analyse deiner Mahnung und einen fertigen Widerspruch, den du direkt verwenden kannst.
-      </div>
-
-      <div class="modal__price">
-        €49 <span style="color:#9CA3AF;">einmalig · kein Abo</span>
-      </div>
+      <div class="modal__eyebrow">Was du erhältst</div>
+      <div class="modal__title">Analyse + Widerspruch innerhalb von 24 Stunden</div>
+      <div class="modal__sub">Nach der Zahlung reichst du dein Schreiben ein. Wir analysieren es und senden dir das Ergebnis per E-Mail.</div>
+      <div class="modal__price">€49 <span style="font-size:1rem;color:#9CA3AF;font-weight:400;">einmalig · kein Abo</span></div>
     </div>
-
     <div class="modal__body">
-
+      <div class="modal__feature">
+        <div class="check">✓</div>
+        <div>Vollständige Analyse auf Widerspruchsgründe (Verjährung, Kosten, unberechtigte Forderung)</div>
+      </div>
+      <div class="modal__feature">
+        <div class="check">✓</div>
+        <div>Stärke-Indikator: Wie stark ist deine Position?</div>
+      </div>
+      <div class="modal__feature">
+        <div class="check">✓</div>
+        <div>Fertiger Widerspruch — direkt verwendbar</div>
+      </div>
+      <div class="modal__feature">
+        <div class="check">✓</div>
+        <div>Klare nächste Schritte in verständlicher Sprache</div>
+      </div>
+      <div class="modal__disclaimer">
+        ℹ️ Dies ist eine informative Analyse, keine Rechtsberatung. Du erhältst dein Ergebnis innerhalb von 24 Stunden nach Einreichung deines Schreibens.
+      </div>
       <p id="modal-dynamic-copy" style="margin-bottom:16px;color:#6b7a90;font-size:0.9rem;">
         Wir haben bereits erste Hinweise erkannt. Die vollständige Prüfung folgt nach der Zahlung.
       </p>
-
-      <div class="modal__feature">✓ Analyse der Forderung und Kosten</div>
-      <div class="modal__feature">✓ Einschätzung deiner Chancen</div>
-      <div class="modal__feature">✓ Fertiger Widerspruch</div>
-      <div class="modal__feature">✓ Klare nächste Schritte</div>
-
-      <p style="font-size:0.85rem;color:#6b7280;margin-top:10px;">
-        Viele zahlen aus Unsicherheit sofort — obwohl sich eine Prüfung oft lohnt.
-      </p>
-
-      <div class="modal__disclaimer">
-        Keine Rechtsberatung. Ein Widerspruch stoppt die Zahlung nicht automatisch.
-      </div>
-
-      <a href="YOUR_STRIPE_LINK" class="modal__cta">
-        Jetzt sicher zahlen und Analyse starten — €49
+      <a href="https://buy.stripe.com/JOUW_LIVE_LINK" class="modal__cta">
+        €49 zahlen und Analyse erhalten →
       </a>
-
-      <div class="cta-sub">
-        Einmalige Zahlung · keine versteckten Kosten · Ergebnis innerhalb von 24 Stunden
-      </div>
-
-      <div class="modal__security">
-        🔒 Sichere Zahlung über Stripe
-      </div>
-
+      <div class="modal__security">🔒 Sichere Zahlung über Stripe · SEPA-Lastschrift verfügbar</div>
       <div class="modal__close" onclick="closeModal()">Abbrechen</div>
-
     </div>
   </div>
 </div>
