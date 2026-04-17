@@ -47,3 +47,37 @@ export function validateUploadInput({ file, name, email }) {
 
   return null;
 }
+
+
+// 👇 NIEUW TOEVOEGEN
+
+export function extractTaggedSection(text, tag) {
+  const start = `[${tag}]`;
+  const end = `[/${tag}]`;
+
+  const startIndex = text.indexOf(start);
+  const endIndex = text.indexOf(end);
+
+  if (startIndex === -1 || endIndex === -1) return '';
+
+  return text.substring(startIndex + start.length, endIndex).trim();
+}
+
+export function escapeHtml(str) {
+  return String(str || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+export function bulletsToHtml(text) {
+  return String(text || '')
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean)
+    .map(line => line.replace(/^- /, '').trim())
+    .map(line => `<li>${escapeHtml(line)}</li>`)
+    .join('');
+}
