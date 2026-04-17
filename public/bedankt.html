@@ -376,7 +376,7 @@
     // 1. Vervang WORKER_URL door je echte worker endpoint
     // 2. Stripe success_url moet naar /bedankt.html?session_id={CHECKOUT_SESSION_ID}
 
-    const WORKER_URL = 'https://YOUR-WORKER.workers.dev/analyze';
+    const WORKER_URL = 'https://YOUR-WORKER.workers.dev/submit';
 
     (function validateAccess() {
       const params = new URLSearchParams(window.location.search);
