@@ -1,1 +1,22 @@
+body {
+  font-family: Arial;
+  background: #f6f8fb;
+}
+
+.container {
+  max-width: 600px;
+  margin: auto;
+  padding: 40px;
+}
+
+button {
+  padding: 10px 20px;
+  background: #1b3a8c;
+  color: white;
+  border: none;
+}
+
+.hidden {
+  display: none;
+}
 
