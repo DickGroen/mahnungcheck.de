@@ -10,7 +10,6 @@ const stickyFooter = document.getElementById('sticky-footer');
 
 let latestTriage = null;
 
-// Drag & drop
 if (uploadZone) {
   uploadZone.addEventListener('dragover', e => {
     e.preventDefault();
@@ -25,9 +24,7 @@ if (uploadZone) {
     e.preventDefault();
     uploadZone.classList.remove('drag-over');
     const file = e.dataTransfer.files[0];
-    if (file) {
-      processFile(file);
-    }
+    if (file) processFile(file);
   });
 }
 
@@ -38,7 +35,6 @@ function handleFile(input) {
 }
 
 async function processFile(file) {
-  // visuele feedback direct
   uploadZone.innerHTML = `
     <div class="upload-icon" style="border-color:var(--green);">
       <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="var(--green)" stroke-width="2">
@@ -51,9 +47,12 @@ async function processFile(file) {
 
   teaser.classList.add('visible');
   teaserCompany.textContent = 'Analyse läuft...';
-  teaserFound.textContent = 'Wir prüfen Absender, Betrag und mögliche Risiken.';
+  teaserFound.textContent = 'Wir prüfen Absender, Betrag und mögliches Risiko.';
   teaserSub.textContent = 'Bitte kurz warten...';
-  teaserLockedText.innerHTML = `<strong>Erste Einschätzung wird erstellt</strong>`;
+  teaserLockedText.innerHTML = `
+    <strong>Vollständige Analyse nach Zahlung</strong>
+    Du erhältst eine detaillierte Einschätzung, mögliche Widerspruchsgründe und einen fertigen Widerspruch innerhalb von 24 Stunden per E-Mail.
+  `;
 
   try {
     const formData = new FormData();
@@ -65,6 +64,11 @@ async function processFile(file) {
     });
 
     const data = await res.json();
+
+    if (!data.ok) {
+      throw new Error(data.error || 'Analyse fehlgeschlagen');
+    }
+
     latestTriage = data;
 
     const company = data.company || 'Unbekannter Absender';
@@ -88,12 +92,14 @@ async function processFile(file) {
       openModal();
     }, 700);
   } catch (err) {
+    latestTriage = null;
+
     teaserCompany.textContent = 'Datei erkannt';
     teaserFound.textContent = 'Wir konnten keine Live-Einschätzung laden.';
     teaserSub.textContent = 'Du kannst trotzdem mit der vollständigen Analyse fortfahren.';
     teaserLockedText.innerHTML = `
-      <strong>Analyse nach Zahlung verfügbar</strong>
-      Nach der Zahlung prüft unser System dein Schreiben vollständig.
+      <strong>Vollständige Analyse nach Zahlung</strong>
+      Du erhältst eine detaillierte Einschätzung und einen fertigen Widerspruch innerhalb von 24 Stunden per E-Mail.
     `;
   }
 }
@@ -112,7 +118,7 @@ function formatEuro(value) {
 }
 
 function escapeHtml(str) {
-  return String(str)
+  return String(str || '')
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
@@ -120,9 +126,9 @@ function escapeHtml(str) {
     .replaceAll("'", '&#039;');
 }
 
-// Sticky footer
 window.addEventListener('scroll', () => {
   if (!stickyFooter) return;
+
   if (window.scrollY > 500) {
     stickyFooter.classList.add('visible');
   } else {
@@ -130,20 +136,27 @@ window.addEventListener('scroll', () => {
   }
 });
 
-// Modal
 function openModal() {
   if (!modal) return;
+
   modal.classList.add('visible');
   document.body.style.overflow = 'hidden';
 
-  // optioneel modal copy dynamischer maken op basis van teaser
   const modalDynamic = document.getElementById('modal-dynamic-copy');
-  if (modalDynamic && latestTriage) {
-    const company = latestTriage.company || 'dem angegebenen Unternehmen';
-    const amount = typeof latestTriage.amount === 'number' ? formatEuro(latestTriage.amount) : '';
-    modalDynamic.textContent = amount
-      ? `Wir haben ein Schreiben von ${company} mit einem Betrag von ${amount} erkannt.`
-      : `Wir haben ein Schreiben von ${company} erkannt.`;
+
+  if (modalDynamic) {
+    if (latestTriage) {
+      const company = latestTriage.company || 'dem angegebenen Unternehmen';
+      const amount = typeof latestTriage.amount === 'number'
+        ? formatEuro(latestTriage.amount)
+        : '';
+
+      modalDynamic.textContent = amount
+        ? `Wir haben bereits ein Schreiben von ${company} mit einem Betrag von ${amount} erkannt. Die vollständige Prüfung folgt nach der Zahlung.`
+        : `Wir haben bereits erste Hinweise erkannt. Die vollständige Prüfung folgt nach der Zahlung.`;
+    } else {
+      modalDynamic.textContent = 'Wir haben bereits erste Hinweise erkannt. Die vollständige Prüfung folgt nach der Zahlung.';
+    }
   }
 }
 
@@ -165,15 +178,19 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// FAQ
 function toggleFaq(el) {
   const item = el.closest('.faq-item');
   const isOpen = item.classList.contains('open');
-  document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
-  if (!isOpen) item.classList.add('open');
+
+  document.querySelectorAll('.faq-item.open').forEach(i => {
+    i.classList.remove('open');
+  });
+
+  if (!isOpen) {
+    item.classList.add('open');
+  }
 }
 
-// expose voor inline handlers
 window.handleFile = handleFile;
 window.openModal = openModal;
 window.closeModal = closeModal;
