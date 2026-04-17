@@ -16,5 +16,5 @@ export async function generateAnalysis(env, { fileBase64, mediaType, route }) {
     mediaType
   });
 
-  return raw;
+  return raw || '';
 }
