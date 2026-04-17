@@ -3,22 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <title>Mahnung prüfen – bevor du zahlst</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
 
 <div class="container">
-  <h1>Zahlst du diese Mahnung zu Unrecht?</h1>
 
-  <p>Viele Forderungen sind fehlerhaft oder überhöht. Prüfe deine Mahnung in wenigen Minuten.</p>
+<h1>Zahlst du diese Mahnung zu Unrecht?</h1>
 
-  <input type="file" id="fileInput">
+<p class="sub">
+Viele Inkassoforderungen sind fehlerhaft oder überhöht.  
+Prüfe deine Mahnung jetzt – bevor du Geld verlierst.
+</p>
 
-  <button onclick="handleUpload()">Jetzt prüfen</button>
+<div class="trust">
+🔒 Kein Konto nötig | 📄 Dokument wird gelöscht | ⚡ Ergebnis in Sekunden
+</div>
 
-  <div id="teaser" class="hidden"></div>
+<div class="box">
+
+<h3>Mahnung hochladen</h3>
+
+<input type="file" id="fileInput" accept=".pdf,.jpg,.png">
+
+<button onclick="analyzeFile()">Jetzt prüfen</button>
+
+<div id="teaser" class="teaser hidden"></div>
+
+</div>
+
 </div>
 
 <script src="app.js"></script>
