@@ -3,445 +3,476 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Danke für deine Zahlung – Mahnung Check DE</title>
+  <title>Danke für deine Zahlung | Mahnung Check DE</title>
+  <link rel="stylesheet" href="styles.css">
   <style>
-    :root {
-      --bg: #f5f7fb;
-      --card: #ffffff;
-      --text: #111827;
-      --muted: #6b7280;
-      --line: #e5e7eb;
-      --primary: #1b3a8c;
-      --primary-hover: #122968;
-      --soft: #eef3ff;
-      --success: #15803d;
-      --success-soft: #ecfdf3;
-      --warn: #b45309;
-      --warn-soft: #fff7ed;
-      --error: #b91c1c;
-      --error-soft: #fef2f2;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      padding: 32px 18px;
-      line-height: 1.6;
-    }
-
-    .wrap {
+    .thankyou-wrap {
       max-width: 760px;
       margin: 0 auto;
+      padding: 56px 24px 80px;
     }
 
-    .card {
-      background: var(--card);
-      border: 1px solid var(--line);
+    .thankyou-card {
+      background: var(--white);
+      border: 1.5px solid var(--line);
       border-radius: 16px;
-      padding: 36px 24px;
-      box-shadow: 0 10px 30px rgba(17, 24, 39, 0.06);
-      text-align: center;
-      overflow: hidden;
+      padding: 36px 28px;
+      box-shadow: 0 10px 24px rgba(17, 24, 39, 0.06);
     }
 
-    .badge {
+    .thankyou-badge {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: var(--success-soft);
-      color: var(--success);
-      border-radius: 999px;
-      padding: 8px 14px;
-      font-size: 13px;
+      background: var(--green-soft);
+      color: var(--green);
+      border-radius: 100px;
+      padding: 6px 14px;
+      font-size: 0.78rem;
       font-weight: 700;
       margin-bottom: 18px;
     }
 
-    .dot {
+    .thankyou-dot {
       width: 8px;
       height: 8px;
+      background: var(--green);
       border-radius: 50%;
-      background: var(--success);
     }
 
-    h1 {
-      font-size: clamp(1.9rem, 4vw, 2.6rem);
-      line-height: 1.15;
+    .thankyou-title {
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
       margin-bottom: 12px;
+      color: var(--ink);
     }
 
-    .lead {
-      font-size: 18px;
-      color: var(--muted);
+    .thankyou-sub {
+      font-size: 1rem;
+      color: var(--ink-3);
+      line-height: 1.75;
       margin-bottom: 28px;
+      max-width: 620px;
     }
 
-    .steps {
-      text-align: left;
-      background: #fafbff;
+    .thankyou-steps {
+      display: grid;
+      gap: 14px;
+      margin-bottom: 30px;
+      background: var(--surface);
       border: 1px solid var(--line);
-      border-radius: 14px;
+      border-radius: 12px;
       padding: 18px 18px 8px;
-      margin-bottom: 24px;
     }
 
-    .step {
+    .thankyou-step {
       display: flex;
+      align-items: flex-start;
       gap: 12px;
-      margin-bottom: 14px;
     }
 
-    .step-num {
+    .thankyou-step-num {
       width: 28px;
       height: 28px;
+      flex-shrink: 0;
       border-radius: 50%;
-      background: var(--soft);
-      color: var(--primary);
-      font-weight: 700;
-      font-size: 14px;
+      background: var(--accent-soft);
+      color: var(--accent);
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-shrink: 0;
+      font-size: 0.82rem;
+      font-weight: 700;
     }
 
-    .step strong {
-      display: block;
+    .thankyou-step-title {
+      font-weight: 700;
+      color: var(--ink);
+      font-size: 0.95rem;
       margin-bottom: 2px;
-      font-size: 15px;
     }
 
-    .step span {
+    .thankyou-step-desc {
       color: var(--muted);
-      font-size: 14px;
+      font-size: 0.86rem;
+      line-height: 1.7;
     }
 
-    .field-wrap {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: 16px;
+    .form-grid {
+      display: grid;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .field {
       text-align: left;
     }
 
     .field label {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text);
       display: block;
-      margin-bottom: 4px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 8px;
     }
 
     .field input {
       width: 100%;
-      padding: 11px 14px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      font-size: 15px;
-      font-family: inherit;
-      outline: none;
-    }
-
-    .upload-box {
-      margin-top: 6px;
-      border: 1px solid #e2e8f0;
-      background: #f8faff;
+      border: 1.5px solid var(--line);
       border-radius: 10px;
-      padding: 24px 18px;
+      padding: 14px 15px;
+      font-size: 0.95rem;
+      color: var(--ink);
+      background: var(--white);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .field input:focus {
+      border-color: var(--accent-2);
+      box-shadow: 0 0 0 4px rgba(46, 95, 172, 0.08);
+    }
+
+    .upload-panel {
+      background: var(--surface);
+      border: 1.5px dashed var(--line);
+      border-radius: 12px;
+      padding: 28px 22px;
+      text-align: center;
+      margin-bottom: 16px;
+      transition: border-color 0.2s, background 0.2s;
       cursor: pointer;
-      transition: 0.2s ease;
-      display: block;
     }
 
-    .upload-box:hover,
-    .upload-box.dragover {
-      border-color: var(--primary);
-      background: var(--soft);
+    .upload-panel:hover,
+    .upload-panel.drag-over {
+      border-color: var(--accent-2);
+      background: var(--accent-soft);
     }
 
-    .upload-title {
+    .upload-panel__icon {
+      width: 52px;
+      height: 52px;
+      margin: 0 auto 14px;
+      border-radius: 10px;
+      border: 1.5px solid var(--line);
+      background: var(--white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .upload-panel__title {
       font-weight: 700;
-      font-size: 18px;
+      font-size: 1rem;
+      color: var(--ink);
       margin-bottom: 6px;
     }
 
-    .upload-sub {
-      font-size: 14px;
+    .upload-panel__sub {
+      font-size: 0.84rem;
       color: var(--muted);
+      line-height: 1.6;
     }
 
-    input[type="file"] {
+    #real-file-input {
       display: none;
     }
 
-    .file-name {
+    .selected-file {
       display: none;
-      margin-top: 14px;
-      background: var(--success-soft);
-      color: var(--success);
-      border: 1px solid #ccebd6;
+      background: var(--green-soft);
+      color: var(--green);
+      border: 1px solid #b7e4c7;
       border-radius: 10px;
       padding: 12px 14px;
-      font-size: 14px;
+      font-size: 0.86rem;
       font-weight: 600;
+      margin-bottom: 16px;
       text-align: left;
     }
 
-    .cta {
-      display: inline-block;
-      width: 100%;
-      margin-top: 18px;
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      padding: 16px 18px;
-      font-family: inherit;
-      font-size: 16px;
-      font-weight: 700;
-      cursor: pointer;
-      text-decoration: none;
-      transition: background 0.2s ease;
-    }
-
-    .cta:hover {
-      background: var(--primary-hover);
-    }
-
-    .cta[disabled] {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .status {
+    .status-box {
       display: none;
-      margin-top: 14px;
-      padding: 12px 14px;
       border-radius: 10px;
-      font-size: 14px;
+      padding: 13px 15px;
+      font-size: 0.86rem;
       font-weight: 600;
+      margin-top: 14px;
+      line-height: 1.6;
+    }
+
+    .status-box.success {
+      display: block;
+      background: var(--green-soft);
+      color: var(--green);
+      border: 1px solid #b7e4c7;
+    }
+
+    .status-box.error {
+      display: block;
+      background: var(--red-soft);
+      color: var(--red);
+      border: 1px solid #f5b7b1;
+    }
+
+    .status-box.info {
+      display: block;
+      background: var(--amber-soft);
+      color: var(--amber);
+      border: 1px solid #f6d58a;
+    }
+
+    .helper-note {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 14px;
+      line-height: 1.7;
+    }
+
+    .fallback-box {
+      margin-top: 28px;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+    }
+
+    .fallback-box strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--ink);
+    }
+
+    .fallback-box p {
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.7;
+    }
+
+    .fallback-email {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--accent);
+      margin-top: 8px;
+    }
+
+    .locked-screen {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 80px 24px;
       text-align: center;
     }
 
-    .status.success {
-      display: block;
-      background: var(--success-soft);
-      color: var(--success);
-      border: 1px solid #ccebd6;
+    .locked-screen h2 {
+      margin-bottom: 10px;
+      color: var(--ink);
     }
 
-    .status.error {
-      display: block;
-      background: var(--error-soft);
-      color: var(--error);
-      border: 1px solid #fecaca;
-    }
-
-    .status.warn {
-      display: block;
-      background: var(--warn-soft);
-      color: var(--warn);
-      border: 1px solid #fed7aa;
-    }
-
-    .note {
-      margin-top: 14px;
-      font-size: 14px;
+    .locked-screen p {
       color: var(--muted);
+      line-height: 1.7;
     }
 
-    .fallback {
-      margin-top: 26px;
-      padding-top: 20px;
-      border-top: 1px solid var(--line);
-      font-size: 14px;
-      color: var(--muted);
-    }
-
-    .fallback strong {
-      color: var(--text);
-    }
-
-    .email {
-      font-size: 18px;
+    .locked-screen a {
+      display: inline-block;
+      margin-top: 16px;
+      color: var(--accent);
       font-weight: 700;
-      color: var(--text);
-      margin-top: 6px;
-    }
-
-    .hidden {
-      display: none !important;
     }
 
     @media (max-width: 600px) {
-      .card {
-        padding: 28px 18px;
+      .thankyou-wrap {
+        padding: 40px 18px 72px;
       }
 
-      .lead {
-        font-size: 16px;
+      .thankyou-card {
+        padding: 28px 18px;
       }
     }
   </style>
 </head>
 <body>
 
-  <div id="blocked" class="hidden" style="font-family:sans-serif;text-align:center;padding:80px 20px;">
-    <h2 style="color:#111827;">Kein Zugriff</h2>
-    <p style="color:#6b7280;margin-top:8px;">Diese Seite ist nur nach erfolgreicher Zahlung erreichbar.</p>
-    <a href="/" style="color:#1b3a8c;margin-top:16px;display:inline-block;">Zurück zur Startseite</a>
+  <div id="locked-screen" class="locked-screen" style="display:none;">
+    <h2>Kein Zugriff auf diese Seite</h2>
+    <p>
+      Diese Seite ist nur nach erfolgreicher Zahlung erreichbar.
+      Bitte gehe zurück zur Startseite und starte den Vorgang erneut.
+    </p>
+    <a href="/">Zurück zur Startseite</a>
   </div>
 
-  <div class="wrap" id="main-wrap">
-    <div class="card">
-      <div class="badge">
-        <span class="dot"></span>
-        Zahlung eingegangen
+  <div id="thankyou-app" class="thankyou-wrap">
+    <div class="thankyou-card">
+
+      <div class="thankyou-badge">
+        <span class="thankyou-dot"></span>
+        Zahlung erfolgreich
       </div>
 
-      <h1>Danke für deine Zahlung</h1>
-      <p class="lead">
+      <h1 class="thankyou-title">Danke — dein Zugang ist freigeschaltet</h1>
+
+      <p class="thankyou-sub">
         Lade jetzt deine Mahnung oder deinen Inkassobrief hoch.  
-        Du erhältst deine Analyse und den Widerspruch innerhalb von 24 Stunden per E-Mail.
+        Nach dem Upload starten wir die Analyse und senden dir das Ergebnis
+        innerhalb von 24 Stunden per E-Mail.
       </p>
 
-      <div class="steps">
-        <div class="step">
-          <div class="step-num">1</div>
+      <div class="thankyou-steps">
+        <div class="thankyou-step">
+          <div class="thankyou-step-num">1</div>
           <div>
-            <strong>Schreiben auswählen</strong>
-            <span>PDF, JPG oder PNG. Bitte gut lesbar und vollständig hochladen.</span>
+            <div class="thankyou-step-title">Schreiben hochladen</div>
+            <div class="thankyou-step-desc">
+              PDF, JPG oder PNG — bitte möglichst vollständig und gut lesbar.
+            </div>
           </div>
         </div>
 
-        <div class="step">
-          <div class="step-num">2</div>
+        <div class="thankyou-step">
+          <div class="thankyou-step-num">2</div>
           <div>
-            <strong>Wir starten die Analyse</strong>
-            <span>Wir prüfen Forderung, Kosten, Fristen und mögliche Widerspruchsgründe.</span>
+            <div class="thankyou-step-title">Wir analysieren den Fall</div>
+            <div class="thankyou-step-desc">
+              Wir prüfen Absender, Betrag, Frist, Kosten und mögliche Widerspruchsgründe.
+            </div>
           </div>
         </div>
 
-        <div class="step">
-          <div class="step-num">3</div>
+        <div class="thankyou-step">
+          <div class="thankyou-step-num">3</div>
           <div>
-            <strong>Ergebnis per E-Mail</strong>
-            <span>Innerhalb von 24 Stunden erhältst du deine Analyse und deinen fertigen Widerspruch.</span>
+            <div class="thankyou-step-title">Ergebnis per E-Mail</div>
+            <div class="thankyou-step-desc">
+              Du erhältst deine Analyse und den fertigen Widerspruch innerhalb von 24 Stunden.
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="field-wrap">
+      <div class="form-grid">
         <div class="field">
-          <label for="input-name">Name</label>
-          <input type="text" id="input-name" placeholder="Dein vollständiger Name">
+          <label for="customer-name">Name</label>
+          <input type="text" id="customer-name" placeholder="Dein vollständiger Name">
         </div>
 
         <div class="field">
-          <label for="input-email">E-Mail-Adresse</label>
-          <input type="email" id="input-email" placeholder="Wohin sollen wir dein Ergebnis senden?">
+          <label for="customer-email">E-Mail-Adresse</label>
+          <input type="email" id="customer-email" placeholder="Wohin sollen wir dein Ergebnis senden?">
         </div>
       </div>
 
-      <label for="file-upload" class="upload-box" id="upload-box">
-        <input type="file" id="file-upload" accept=".pdf,.jpg,.jpeg,.png">
-        <div class="upload-title">Klicke hier, um dein Schreiben hochzuladen</div>
-        <div class="upload-sub">PDF, JPG oder PNG — max. 10 MB</div>
-        <div class="file-name" id="file-name"></div>
+      <label class="upload-panel" id="upload-panel" for="real-file-input">
+        <input type="file" id="real-file-input" accept=".pdf,.jpg,.jpeg,.png">
+        <div class="upload-panel__icon">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#6B7A90" stroke-width="1.8">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+        </div>
+        <div class="upload-panel__title">Jetzt Schreiben auswählen</div>
+        <div class="upload-panel__sub">
+          PDF, JPG oder PNG · max. 10 MB · sichere Übertragung
+        </div>
       </label>
 
-      <button class="cta" type="button" id="upload-btn" disabled>
+      <div class="selected-file" id="selected-file"></div>
+
+      <button class="cta-main" id="submit-btn" type="button" disabled>
         Wähle zuerst eine Datei aus
       </button>
 
-      <div id="upload-status" class="status"></div>
+      <div class="status-box" id="status-box"></div>
 
-      <p class="note">
-        Je schneller du dein Schreiben hochlädst, desto schneller können wir deine Analyse starten.
-      </p>
-
-      <div class="fallback">
-        <strong>Upload funktioniert nicht?</strong> Dann sende dein Schreiben an:
-        <div class="email">info@mahnung-check.de</div>
-        Bitte nenne in deiner E-Mail deinen Namen und — wenn vorhanden — deine Bestellnummer.
+      <div class="helper-note">
+        Hinweis: Bitte gib dieselbe E-Mail-Adresse an, unter der du dein Ergebnis erhalten möchtest.
       </div>
+
+      <div class="fallback-box">
+        <strong>Upload funktioniert nicht?</strong>
+        <p>
+          Dann sende dein Schreiben direkt per E-Mail an uns. Bitte nenne deinen Namen
+          und — wenn vorhanden — deine Bestellnummer.
+        </p>
+        <div class="fallback-email">info@mahnung-check.de</div>
+      </div>
+
     </div>
   </div>
 
   <script>
     // Belangrijk:
-    // 1. Vervang WORKER_URL door je echte worker endpoint
-    // 2. Stripe success_url moet naar /bedankt.html?session_id={CHECKOUT_SESSION_ID}
+    // Vervang hieronder door je echte worker endpoint
+    const SUBMIT_URL = 'https://YOUR-WORKER.workers.dev/submit';
 
-    const WORKER_URL = 'https://YOUR-WORKER.workers.dev/submit';
+    const lockedScreen = document.getElementById('locked-screen');
+    const thankyouApp = document.getElementById('thankyou-app');
+    const uploadPanel = document.getElementById('upload-panel');
+    const fileInput = document.getElementById('real-file-input');
+    const selectedFileBox = document.getElementById('selected-file');
+    const submitBtn = document.getElementById('submit-btn');
+    const statusBox = document.getElementById('status-box');
 
-    (function validateAccess() {
-      const params = new URLSearchParams(window.location.search);
-      const sid = params.get('session_id');
-
-      // simpele MVP-check: alleen session_id aanwezig + Stripe patroon
-      if (!sid || (!sid.startsWith('cs_live_') && !sid.startsWith('cs_test_'))) {
-        document.getElementById('blocked').classList.remove('hidden');
-        document.getElementById('main-wrap').classList.add('hidden');
-      }
-    })();
-
-    const input = document.getElementById('file-upload');
-    const fileName = document.getElementById('file-name');
-    const uploadBox = document.getElementById('upload-box');
-    const uploadBtn = document.getElementById('upload-btn');
-    const statusEl = document.getElementById('upload-status');
     let selectedFile = null;
 
-    function showStatus(message, type) {
-      statusEl.className = 'status ' + type;
-      statusEl.innerHTML = message;
-    }
+    validateSession();
 
-    input.addEventListener('change', function () {
-      if (input.files && input.files[0]) {
-        selectedFile = input.files[0];
-        fileName.style.display = 'block';
-        fileName.textContent = 'Ausgewählte Datei: ' + selectedFile.name;
-        uploadBtn.disabled = false;
-        uploadBtn.textContent = 'Schreiben jetzt hochladen';
-      }
-    });
-
-    uploadBox.addEventListener('dragover', e => {
-      e.preventDefault();
-      uploadBox.classList.add('dragover');
-    });
-
-    uploadBox.addEventListener('dragleave', () => {
-      uploadBox.classList.remove('dragover');
-    });
-
-    uploadBox.addEventListener('drop', e => {
-      e.preventDefault();
-      uploadBox.classList.remove('dragover');
-
-      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-        input.files = e.dataTransfer.files;
-        selectedFile = e.dataTransfer.files[0];
-        fileName.style.display = 'block';
-        fileName.textContent = 'Ausgewählte Datei: ' + selectedFile.name;
-        uploadBtn.disabled = false;
-        uploadBtn.textContent = 'Schreiben jetzt hochladen';
-      }
-    });
-
-    uploadBtn.addEventListener('click', startUpload);
-
-    async function startUpload() {
-      const file = document.getElementById('file-upload').files[0] || selectedFile;
-      const name = document.getElementById('input-name').value.trim();
-      const email = document.getElementById('input-email').value.trim();
+    function validateSession() {
       const params = new URLSearchParams(window.location.search);
       const sessionId = params.get('session_id');
+
+      if (!sessionId || (!sessionId.startsWith('cs_live_') && !sessionId.startsWith('cs_test_'))) {
+        lockedScreen.style.display = 'block';
+        thankyouApp.style.display = 'none';
+      }
+    }
+
+    function showStatus(message, type) {
+      statusBox.className = 'status-box ' + type;
+      statusBox.innerHTML = message;
+    }
+
+    function updateSelectedFile(file) {
+      if (!file) return;
+      selectedFile = file;
+      selectedFileBox.style.display = 'block';
+      selectedFileBox.textContent = 'Ausgewählte Datei: ' + file.name;
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Schreiben jetzt hochladen';
+    }
+
+    fileInput.addEventListener('change', function () {
+      if (fileInput.files && fileInput.files[0]) {
+        updateSelectedFile(fileInput.files[0]);
+      }
+    });
+
+    uploadPanel.addEventListener('dragover', function (e) {
+      e.preventDefault();
+      uploadPanel.classList.add('drag-over');
+    });
+
+    uploadPanel.addEventListener('dragleave', function () {
+      uploadPanel.classList.remove('drag-over');
+    });
+
+    uploadPanel.addEventListener('drop', function (e) {
+      e.preventDefault();
+      uploadPanel.classList.remove('drag-over');
+
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        fileInput.files = e.dataTransfer.files;
+        updateSelectedFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    submitBtn.addEventListener('click', startUpload);
+
+    async function startUpload() {
+      const name = document.getElementById('customer-name').value.trim();
+      const email = document.getElementById('customer-email').value.trim();
+      const params = new URLSearchParams(window.location.search);
+      const sessionId = params.get('session_id');
+      const file = fileInput.files[0] || selectedFile;
 
       if (!name) {
         showStatus('Bitte gib deinen Namen ein.', 'error');
@@ -454,7 +485,7 @@
       }
 
       if (!file) {
-        showStatus('Bitte wähle zuerst dein Schreiben aus.', 'error');
+        showStatus('Bitte wähle zuerst eine Datei aus.', 'error');
         return;
       }
 
@@ -463,9 +494,9 @@
         return;
       }
 
-      uploadBtn.disabled = true;
-      uploadBtn.textContent = 'Upload läuft...';
-      showStatus('Dein Schreiben wird hochgeladen. Bitte kurz warten...', 'warn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Upload läuft...';
+      showStatus('Dein Schreiben wird hochgeladen. Bitte kurz warten...', 'info');
 
       const formData = new FormData();
       formData.append('file', file);
@@ -474,7 +505,7 @@
       formData.append('session_id', sessionId || '');
 
       try {
-        const res = await fetch(WORKER_URL, {
+        const res = await fetch(SUBMIT_URL, {
           method: 'POST',
           body: formData
         });
@@ -482,24 +513,24 @@
         const data = await res.json();
 
         if (data.ok) {
-          showStatus('✓ Erfolgreich hochgeladen. Du erhältst deine Analyse innerhalb von 24 Stunden per E-Mail.', 'success');
+          showStatus('✓ Erfolgreich hochgeladen. Deine Analyse wird innerhalb von 24 Stunden per E-Mail versendet.', 'success');
 
-          document.getElementById('input-name').value = '';
-          document.getElementById('input-email').value = '';
-          document.getElementById('file-upload').value = '';
-          fileName.style.display = 'none';
+          document.getElementById('customer-name').value = '';
+          document.getElementById('customer-email').value = '';
+          fileInput.value = '';
           selectedFile = null;
+          selectedFileBox.style.display = 'none';
 
-          uploadBtn.textContent = 'Schreiben hochgeladen';
+          submitBtn.textContent = 'Schreiben erfolgreich hochgeladen';
         } else {
           showStatus('Upload fehlgeschlagen: ' + (data.error || 'Unbekannter Fehler'), 'error');
-          uploadBtn.disabled = false;
-          uploadBtn.textContent = 'Schreiben jetzt hochladen';
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Schreiben jetzt hochladen';
         }
       } catch (err) {
-        showStatus('Es ist ein technischer Fehler aufgetreten. Bitte versuche es erneut oder sende uns dein Schreiben per E-Mail.', 'error');
-        uploadBtn.disabled = false;
-        uploadBtn.textContent = 'Schreiben jetzt hochladen';
+        showStatus('Technischer Fehler beim Upload. Bitte versuche es erneut oder sende uns dein Schreiben per E-Mail.', 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Schreiben jetzt hochladen';
       }
     }
   </script>
