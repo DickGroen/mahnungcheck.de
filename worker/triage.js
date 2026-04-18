@@ -4,7 +4,7 @@ import { safeJsonParse } from './utils.js';
 
 export async function handleTriage(env, fileBase64, mediaType) {
   const raw = await callClaudeDocument(env, {
-    model: 'claude-3-haiku-20240307',
+    model: 'claude-haiku-4-5-20251001',
     maxTokens: 800,
     prompt: TRIAGE_PROMPT,
     fileBase64,
