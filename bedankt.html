@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Danke für deine Zahlung | Mahnung Check DE</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .thankyou-wrap {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 56px 24px 80px;
+    }
+
+    .thankyou-card {
+      background: var(--white);
+      border: 1.5px solid var(--line);
+      border-radius: 16px;
+      padding: 36px 28px;
+      box-shadow: 0 10px 24px rgba(17, 24, 39, 0.06);
+    }
+
+    .thankyou-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--green-soft);
+      color: var(--green);
+      border-radius: 100px;
+      padding: 6px 14px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      margin-bottom: 18px;
+    }
+
+    .thankyou-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--green);
+      border-radius: 50%;
+    }
+
+    .thankyou-title {
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
+      margin-bottom: 12px;
+      color: var(--ink);
+    }
+
+    .thankyou-sub {
+      font-size: 1rem;
+      color: var(--ink-3);
+      line-height: 1.75;
+      margin-bottom: 28px;
+      max-width: 620px;
+    }
+
+    .thankyou-steps {
+      display: grid;
+      gap: 14px;
+      margin-bottom: 30px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 18px 18px 8px;
+    }
+
+    .thankyou-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .thankyou-step-num {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .thankyou-step-title {
+      font-weight: 700;
+      color: var(--ink);
+      font-size: 0.95rem;
+      margin-bottom: 2px;
+    }
+
+    .thankyou-step-desc {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.7;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .field {
+      text-align: left;
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+
+    .field input {
+      width: 100%;
+      border: 1.5px solid var(--line);
+      border-radius: 10px;
+      padding: 14px 15px;
+      font-size: 0.95rem;
+      color: var(--ink);
+      background: var(--white);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .field input:focus {
+      border-color: var(--accent-2);
+      box-shadow: 0 0 0 4px rgba(46, 95, 172, 0.08);
+    }
+
+    .upload-panel {
+      background: var(--surface);
+      border: 1.5px dashed var(--line);
+      border-radius: 12px;
+      padding: 28px 22px;
+      text-align: center;
+      margin-bottom: 16px;
+      transition: border-color 0.2s, background 0.2s;
+      cursor: pointer;
+    }
+
+    .upload-panel:hover,
+    .upload-panel.drag-over {
+      border-color: var(--accent-2);
+      background: var(--accent-soft);
+    }
+
+    .upload-panel__icon {
+      width: 52px;
+      height: 52px;
+      margin: 0 auto 14px;
+      border-radius: 10px;
+      border: 1.5px solid var(--line);
+      background: var(--white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .upload-panel__title {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }
+
+    .upload-panel__sub {
+      font-size: 0.84rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    #real-file-input {
+      display: none;
+    }
+
+    .selected-file {
+      display: none;
+      background: var(--green-soft);
+      color: var(--green);
+      border: 1px solid #b7e4c7;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 0.86rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      text-align: left;
+    }
+
+    .status-box {
+      display: none;
+      border-radius: 10px;
+      padding: 13px 15px;
+      font-size: 0.86rem;
+      font-weight: 600;
+      margin-top: 14px;
+      line-height: 1.6;
+    }
+
+    .status-box.success {
+      display: block;
+      background: var(--green-soft);
+      color: var(--green);
+      border: 1px solid #b7e4c7;
+    }
+
+    .status-box.error {
+      display: block;
+      background: var(--red-soft);
+      color: var(--red);
+      border: 1px solid #f5b7b1;
+    }
+
+    .status-box.info {
+      display: block;
+      background: var(--amber-soft);
+      color: var(--amber);
+      border: 1px solid #f6d58a;
+    }
+
+    .helper-note {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 14px;
+      line-height: 1.7;
+    }
+
+    .fallback-box {
+      margin-top: 28px;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+    }
+
+    .fallback-box strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--ink);
+    }
+
+    .fallback-box p {
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.7;
+    }
+
+    .fallback-email {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--accent);
+      margin-top: 8px;
+    }
+
+    .locked-screen {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 80px 24px;
+      text-align: center;
+    }
+
+    .locked-screen h2 {
+      margin-bottom: 10px;
+      color: var(--ink);
+    }
+
+    .locked-screen p {
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .locked-screen a {
+      display: inline-block;
+      margin-top: 16px;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    @media (max-width: 600px) {
+      .thankyou-wrap {
+        padding: 40px 18px 72px;
+      }
+
+      .thankyou-card {
+        padding: 28px 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="locked-screen" class="locked-screen" style="display:none;">
+    <h2>Kein Zugriff auf diese Seite</h2>
+    <p>
+      Diese Seite ist nur nach erfolgreicher Zahlung erreichbar.
+      Bitte gehe zurück zur Startseite und starte den Vorgang erneut.
+    </p>
+    <a href="/">Zurück zur Startseite</a>
+  </div>
+
+  <div id="thankyou-app" class="thankyou-wrap" style="display:none;">
+    <div class="thankyou-card">
+
+      <div class="thankyou-badge">
+        <span class="thankyou-dot"></span>
+        Zahlung erfolgreich
+      </div>
+
+      <h1 class="thankyou-title">Danke — dein Zugang ist freigeschaltet</h1>
+
+      <p class="thankyou-sub">
+        Lade jetzt deine Mahnung oder deinen Inkassobrief hoch. Nach dem Upload starten wir die Analyse und senden dir das Ergebnis innerhalb von 24 Stunden per E-Mail.
+      </p>
+
+      <div class="thankyou-steps">
+        <div class="thankyou-step">
+          <div class="thankyou-step-num">1</div>
+          <div>
+            <div class="thankyou-step-title">Schreiben hochladen</div>
+            <div class="thankyou-step-desc">
+              PDF, JPG oder PNG — bitte möglichst vollständig und gut lesbar.
+            </div>
+          </div>
+        </div>
+
+        <div class="thankyou-step">
+          <div class="thankyou-step-num">2</div>
+          <div>
+            <div class="thankyou-step-title">Wir analysieren den Fall</div>
+            <div class="thankyou-step-desc">
+              Wir prüfen Absender, Betrag, Frist, Kosten und mögliche Widerspruchsgründe.
+            </div>
+          </div>
+        </div>
+
+        <div class="thankyou-step">
+          <div class="thankyou-step-num">3</div>
+          <div>
+            <div class="thankyou-step-title">Ergebnis per E-Mail</div>
+            <div class="thankyou-step-desc">
+              Du erhältst deine Analyse sowie den fertigen Widerspruch innerhalb von 24 Stunden.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="customer-name">Name</label>
+          <input type="text" id="customer-name" placeholder="Dein vollständiger Name">
+        </div>
+
+        <div class="field">
+          <label for="customer-email">E-Mail-Adresse</label>
+          <input type="email" id="customer-email" placeholder="Wohin sollen wir dein Ergebnis senden?">
+        </div>
+      </div>
+
+      <label class="upload-panel" id="upload-panel" for="real-file-input">
+        <input type="file" id="real-file-input" accept=".pdf,.jpg,.jpeg,.png">
+        <div class="upload-panel__icon">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#6B7A90" stroke-width="1.8">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+        </div>
+        <div class="upload-panel__title">Jetzt Schreiben auswählen</div>
+        <div class="upload-panel__sub">
+          PDF, JPG oder PNG · max. 10 MB · sichere Übertragung
+        </div>
+      </label>
+
+      <div class="selected-file" id="selected-file"></div>
+
+      <button class="cta-main" id="submit-btn" type="button" disabled>
+        Wähle zuerst eine Datei aus
+      </button>
+
+      <div class="status-box" id="status-box"></div>
+
+      <div class="helper-note">
+        Hinweis: Bitte gib dieselbe E-Mail-Adresse an, an die wir dein Ergebnis senden sollen.
+      </div>
+
+      <div class="fallback-box">
+        <strong>Upload funktioniert nicht?</strong>
+        <p>
+          Dann sende dein Schreiben direkt per E-Mail an uns. Bitte gib deinen Namen und — falls vorhanden — deine Bestellnummer an.
+        </p>
+        <div class="fallback-email">info@mahnungcheck.de</div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Belangrijk:
+    // Vervang hieronder door je echte worker endpoint
+  const SUBMIT_URL = 'https://mahnungcheck.dickgroen2.workers.dev/submit';
+
+    const lockedScreen = document.getElementById('locked-screen');
+    const thankyouApp = document.getElementById('thankyou-app');
+    const uploadPanel = document.getElementById('upload-panel');
+    const fileInput = document.getElementById('real-file-input');
+    const selectedFileBox = document.getElementById('selected-file');
+    const submitBtn = document.getElementById('submit-btn');
+    const statusBox = document.getElementById('status-box');
+
+    let selectedFile = null;
+
+    validateSession();
+
+    function validateSession() {
+      const params = new URLSearchParams(window.location.search);
+      const sessionId = params.get('session_id');
+
+      if (sessionId && (sessionId.startsWith('cs_live_') || sessionId.startsWith('cs_test_'))) {
+        thankyouApp.style.display = 'block';
+      } else {
+        lockedScreen.style.display = 'block';
+      }
+    }
+
+    function showStatus(message, type) {
+      statusBox.className = 'status-box ' + type;
+      statusBox.innerHTML = message;
+    }
+
+    function updateSelectedFile(file) {
+      if (!file) return;
+      selectedFile = file;
+      selectedFileBox.style.display = 'block';
+      selectedFileBox.textContent = 'Ausgewählte Datei: ' + file.name;
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Schreiben jetzt hochladen';
+    }
+
+    fileInput.addEventListener('change', function () {
+      if (fileInput.files && fileInput.files[0]) {
+        updateSelectedFile(fileInput.files[0]);
+      }
+    });
+
+    uploadPanel.addEventListener('dragover', function (e) {
+      e.preventDefault();
+      uploadPanel.classList.add('drag-over');
+    });
+
+    uploadPanel.addEventListener('dragleave', function () {
+      uploadPanel.classList.remove('drag-over');
+    });
+
+    uploadPanel.addEventListener('drop', function (e) {
+      e.preventDefault();
+      uploadPanel.classList.remove('drag-over');
+
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        fileInput.files = e.dataTransfer.files;
+        updateSelectedFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    submitBtn.addEventListener('click', startUpload);
+
+    async function startUpload() {
+      const name = document.getElementById('customer-name').value.trim();
+      const email = document.getElementById('customer-email').value.trim();
+      const params = new URLSearchParams(window.location.search);
+      const sessionId = params.get('session_id');
+      const file = fileInput.files[0] || selectedFile;
+
+      if (!name) {
+        showStatus('Bitte gib deinen Namen ein.', 'error');
+        return;
+      }
+
+      if (!email || !email.includes('@')) {
+        showStatus('Bitte gib eine gültige E-Mail-Adresse ein.', 'error');
+        return;
+      }
+
+      if (!file) {
+        showStatus('Bitte wähle zuerst eine Datei aus.', 'error');
+        return;
+      }
+
+      if (file.size > 10 * 1024 * 1024) {
+        showStatus('Die Datei ist zu groß. Maximal 10 MB.', 'error');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Upload läuft...';
+      showStatus('Dein Schreiben wird hochgeladen. Bitte kurz warten...', 'info');
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('name', name);
+      formData.append('email', email);
+      formData.append('session_id', sessionId || '');
+
+      try {
+        const res = await fetch(SUBMIT_URL, {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+
+        if (data.ok) {
+          showStatus('✓ Erfolgreich hochgeladen. Deine Analyse wird innerhalb von 24 Stunden per E-Mail versendet.', 'success');
+
+          document.getElementById('customer-name').value = '';
+          document.getElementById('customer-email').value = '';
+          fileInput.value = '';
+          selectedFile = null;
+          selectedFileBox.style.display = 'none';
+
+          submitBtn.textContent = 'Schreiben erfolgreich hochgeladen';
+        } else {
+          showStatus('Upload fehlgeschlagen: ' + (data.error || 'Unbekannter Fehler'), 'error');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Schreiben jetzt hochladen';
+        }
+      } catch (err) {
+        showStatus('Technischer Fehler beim Upload. Bitte versuche es erneut oder sende uns dein Schreiben per E-Mail.', 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Schreiben jetzt hochladen';
+      }
+    }
+  </script>
+</body>
+</html>
