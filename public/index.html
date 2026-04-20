@@ -46,19 +46,62 @@
       <span class="value-item"><span class="vi-check">✔</span> Dokument wird nach Verarbeitung gelöscht</span>
     </div>
 
-    <!-- UPLOAD -->
+    <!-- TWEE OPTIES -->
+    <div class="optie-grid">
+
+      <!-- OPTIE 1: GRATIS -->
+      <div class="optie-card optie-card--gratis">
+        <div class="optie-badge optie-badge--gratis">Kostenlos</div>
+        <h3 class="optie-title">Erste Einschätzung</h3>
+        <p class="optie-desc">Lade dein Schreiben hoch und erhalte noch heute eine kostenlose Ersteinschätzung — inklusive geschätztem Betrag, der möglicherweise nicht berechtigt ist.</p>
+        <ul class="optie-list">
+          <li>✓ Absender und Betrag erkannt</li>
+          <li>✓ Geschätzter rückforderungsfähiger Betrag</li>
+          <li>✓ Erste Risikoeinschätzung</li>
+          <li>✓ Per E-Mail — innerhalb weniger Stunden</li>
+        </ul>
+        <div class="optie-price">Kostenlos</div>
+        <input type="text" id="gratis-name" placeholder="Dein Name" class="optie-input">
+        <input type="email" id="gratis-email" placeholder="Deine E-Mail-Adresse" class="optie-input">
+        <input type="file" id="gratis-file-input" accept=".pdf,.jpg,.jpeg,.png"
+               onchange="handleGratisFileSelect(this)" style="display:none;">
+        <label class="upload-section upload-section--small" id="gratis-upload-zone" for="gratis-file-input">
+          <div class="upload-label">Schreiben hochladen</div>
+          <div class="upload-hint">PDF, JPG oder PNG · max. 10 MB</div>
+        </label>
+        <button class="optie-btn optie-btn--gratis" id="gratis-btn" onclick="startGratisUpload()" disabled>
+          Kostenlose Einschätzung anfordern
+        </button>
+        <div class="optie-status" id="gratis-status"></div>
+      </div>
+
+      <!-- OPTIE 2: BETAALD -->
+      <div class="optie-card optie-card--betaald">
+        <div class="optie-badge optie-badge--betaald">Vollständig</div>
+        <h3 class="optie-title">Vollständige Analyse</h3>
+        <p class="optie-desc">Erhalte die vollständige Analyse mit einem fertigen Widerspruchsbrief — direkt verwendbar, innerhalb von 24 Stunden.</p>
+        <ul class="optie-list">
+          <li>✓ Vollständige Analyse aller Widerspruchsgründe</li>
+          <li>✓ Einschätzung deiner Chancen</li>
+          <li>✓ Fertiger Widerspruchsbrief</li>
+          <li>✓ Konkrete nächste Schritte</li>
+          <li>✓ Ergebnis innerhalb von 24 Stunden</li>
+        </ul>
+        <div class="optie-price">€49 <span>einmalig · kein Abo</span></div>
+        <a href="https://buy.stripe.com/test_cNidRa6Pidv99dYbJW14401" class="optie-btn optie-btn--betaald">
+          Jetzt zahlen und Analyse starten →
+        </a>
+        <p class="optie-security">🔒 Sichere Zahlung über Stripe</p>
+      </div>
+
+    </div>
+
+    <!-- UPLOAD (verborgen, voor teaser flow) -->
     <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png"
            onchange="handleFile(this)" style="display:none;">
-    <label class="upload-section" id="upload-zone" for="file-input">
-      <div class="upload-icon">
-        <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#6B7A90" stroke-width="1.8">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="17 8 12 3 7 8"/>
-          <line x1="12" y1="3" x2="12" y2="15"/>
-        </svg>
-      </div>
-      <div class="upload-label">Mahnung oder Inkassobrief hochladen — oder direkt zur Zahlung</div>
-      <div class="upload-hint">PDF, JPG oder PNG · max. 10 MB · du zahlst erst im nächsten Schritt</div>
+    <label class="upload-section" id="upload-zone" for="file-input" style="display:none;">
+      <div class="upload-label">Mahnung oder Inkassobrief hochladen</div>
+      <div class="upload-hint">PDF, JPG oder PNG</div>
     </label>
 
     <!-- TEASER -->
@@ -301,7 +344,7 @@
       <p id="modal-dynamic-copy" style="margin-bottom:16px;color:#6b7a90;font-size:0.9rem;">
         Wir haben bereits erste Hinweise erkannt. Die vollständige Prüfung folgt nach der Zahlung.
       </p>
-      <a href="https://buy.stripe.com/test_cNidRa6Pidv99dYbJW14401" class="modal__cta">
+      <a href="https://buy.stripe.com/JOUW_LIVE_LINK" class="modal__cta">
         €49 zahlen und Analyse erhalten →
       </a>
       <div class="modal__security">🔒 Sichere Zahlung über Stripe · SEPA-Lastschrift verfügbar</div>
@@ -311,6 +354,68 @@
 </div>
 
 <script src="app.js"></script>
+<script>
+const WORKER_URL = 'https://mahnungcheck.dickgroen2.workers.dev';
+let gratisFile = null;
+
+function handleGratisFileSelect(input) {
+  if (!input.files || !input.files[0]) return;
+  gratisFile = input.files[0];
+  const zone = document.getElementById('gratis-upload-zone');
+  zone.innerHTML = `<div class="upload-label" style="color:var(--green);">✓ ${escapeHtmlLocal(gratisFile.name)}</div><div class="upload-hint">Datei ausgewählt</div>`;
+  checkGratisReady();
+}
+
+function escapeHtmlLocal(str) {
+  return String(str || '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+}
+
+function checkGratisReady() {
+  const name = document.getElementById('gratis-name').value.trim();
+  const email = document.getElementById('gratis-email').value.trim();
+  const btn = document.getElementById('gratis-btn');
+  btn.disabled = !(name && email && email.includes('@') && gratisFile);
+}
+
+document.getElementById('gratis-name').addEventListener('input', checkGratisReady);
+document.getElementById('gratis-email').addEventListener('input', checkGratisReady);
+
+async function startGratisUpload() {
+  const name = document.getElementById('gratis-name').value.trim();
+  const email = document.getElementById('gratis-email').value.trim();
+  const btn = document.getElementById('gratis-btn');
+  const status = document.getElementById('gratis-status');
+
+  if (!gratisFile) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Wird gesendet...';
+  status.className = 'optie-status optie-status--info';
+  status.textContent = 'Dein Schreiben wird analysiert...';
+
+  const formData = new FormData();
+  formData.append('file', gratisFile);
+  formData.append('name', name);
+  formData.append('email', email);
+
+  try {
+    const res = await fetch(`${WORKER_URL}/analyze-free`, { method: 'POST', body: formData });
+    const data = await res.json();
+    if (data.ok) {
+      status.className = 'optie-status optie-status--success';
+      status.textContent = '✓ Deine Einschätzung wird per E-Mail gesendet. Bitte überprüfe dein Postfach.';
+      btn.textContent = 'Gesendet ✓';
+    } else {
+      throw new Error(data.error || 'Fehler');
+    }
+  } catch (err) {
+    status.className = 'optie-status optie-status--error';
+    status.textContent = 'Fehler: ' + err.message;
+    btn.disabled = false;
+    btn.textContent = 'Kostenlose Einschätzung anfordern';
+  }
+}
+</script>
 
 </body>
 </html>
