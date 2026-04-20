@@ -58,7 +58,7 @@
           <li>✓ Absender und Betrag erkannt</li>
           <li>✓ Geschätzter rückforderungsfähiger Betrag</li>
           <li>✓ Erste Risikoeinschätzung</li>
-          <li>✓ Per E-Mail — innerhalb weniger Stunden</li>
+          <li>✓ Per E-Mail — innerhalb von 90 Minuten (Geschäftszeiten)</li>
         </ul>
         <div class="optie-price">Kostenlos</div>
         <input type="text" id="gratis-name" placeholder="Dein Name" class="optie-input">
@@ -403,7 +403,7 @@ async function startGratisUpload() {
     const data = await res.json();
     if (data.ok) {
       status.className = 'optie-status optie-status--success';
-      status.textContent = '✓ Deine Einschätzung wird per E-Mail gesendet. Bitte überprüfe dein Postfach.';
+      status.textContent = '✓ Deine Einschätzung wird dir innerhalb von 90 Minuten während der Geschäftszeiten (Mo–Fr, 9:00–17:00 Uhr) per E-Mail zugesendet.';
       btn.textContent = 'Gesendet ✓';
     } else {
       throw new Error(data.error || 'Fehler');
