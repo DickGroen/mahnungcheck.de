@@ -357,12 +357,33 @@ var index_default = {
         const { base64, mediaType } = await fileToBase64(file);
         const gratis = await handleGratisAnalyse(env, base64, mediaType);
 
-        await sendGratisEmail(env, { name, email, gratis, stripeLink });
+      const makePayload = {
+  name,
+  email,
+  company: gratis.company || "",
+  amount_claimed: String(gratis.amount_claimed || ""),
+  amount_recoverable: String(gratis.amount_recoverable || ""),
+  risk: gratis.risk || "medium",
+  teaser: gratis.teaser || "",
+  stripe_link: stripeLink,
+  created_at: new Date().toISOString()
+};
 
-        return jsonResponse({
-          ok: true,
-          message: "Deine kostenlose Ersteinsch\u00e4tzung wird per E-Mail versendet."
-        });
+const makeRes = await fetch("https://hook.eu1.make.com/x2sqrgvcb6om9d5f14c53wpp6ug2wpy9", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(makePayload)
+});
+
+if (!makeRes.ok) {
+  const err = await makeRes.text();
+  throw new Error(`Make webhook fehlgeschlagen: ${err}`);
+}
+
+return jsonResponse({
+  ok: true,
+  message: "Deine kostenlose Ersteinsch\u00e4tzung wird per E-Mail versendet."
+});
       } catch (err) {
         return jsonResponse({ ok: false, error: err.message }, 500);
       }
