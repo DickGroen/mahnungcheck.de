@@ -3,7 +3,38 @@ var __name = (target, value) => __defProp(target, "name", { value, configurable:
 
 // worker/triage.js
 import TRIAGE_PROMPT from "./abb86ccfdf7f5f9185ae0f2e7ce697c419834129-triage.txt";
-import GRATIS_PROMPT from "./gratis.txt";
+import HAIKU_PROMPT from "./0d964c7399ac46462d6c7e86d0cdbe73b3891269-haiku.txt";
+import SONNET_PROMPT from "./75a6f5cb02bea21f2638503b183c582110b7d384-sonnet.txt";
+
+const GRATIS_PROMPT = `Du bist ein Analyse-System für Mahnungen und Inkassoschreiben in Deutschland.
+
+Deine Aufgabe:
+Lies das Dokument und erstelle eine kurze, kostenlose Ersteinschätzung für den Verbraucher.
+
+Fokus: Wie viel Geld könnte der Verbraucher möglicherweise zurückfordern oder einsparen?
+
+Gib deine Antwort IMMER exakt in dieser Struktur zurück:
+
+[COMPANY]
+Name des Absenders oder Inkassobüros
+[/COMPANY]
+
+[AMOUNT_CLAIMED]
+Geforderter Gesamtbetrag als Zahl (nur Zahl, kein €-Zeichen)
+[/AMOUNT_CLAIMED]
+
+[AMOUNT_RECOVERABLE]
+Geschätzter Betrag der möglicherweise nicht berechtigt ist (nur Zahl, kein €-Zeichen)
+[/AMOUNT_RECOVERABLE]
+
+[RISK]
+low oder medium oder high
+[/RISK]
+
+[TEASER]
+Schreibe genau 1 Satz: Nenne NUR dass möglicherweise ein Betrag zurückgehalten werden kann.
+Nenne KEINE Gründe, KEINE Paragraphen, KEINE Details.
+[/TEASER]`;
 
 // worker/claude.js
 async function callClaudeDocument(env, { model, maxTokens, prompt, fileBase64, mediaType }) {
@@ -69,7 +100,7 @@ __name(jsonResponse, "jsonResponse");
 function validateUploadInput({ file, name, email }) {
   if (!file) return "Keine Datei empfangen";
   if (!name || !String(name).trim()) return "Name fehlt";
-  if (!email || !String(email).includes("@")) return "Ung\xFCltige E-Mail-Adresse";
+  if (!email || !String(email).includes("@")) return "Ungültige E-Mail-Adresse";
   return null;
 }
 __name(validateUploadInput, "validateUploadInput");
@@ -187,10 +218,6 @@ async function handleGratisAnalyse(env, fileBase64, mediaType) {
 }
 __name(handleGratisAnalyse, "handleGratisAnalyse");
 
-// worker/generator.js
-import HAIKU_PROMPT from "./0d964c7399ac46462d6c7e86d0cdbe73b3891269-haiku.txt";
-import SONNET_PROMPT from "./75a6f5cb02bea21f2638503b183c582110b7d384-sonnet.txt";
-
 async function generateAnalysis(env, { fileBase64, mediaType, route }) {
   const useSonnet = route === "SONNET";
   const prompt = useSonnet ? SONNET_PROMPT : HAIKU_PROMPT;
@@ -207,79 +234,6 @@ function formatEuro(amount) {
   if (!amount || isNaN(amount)) return null;
   return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(amount);
 }
-
-async function sendGratisEmail(env, { name, email, gratis, stripeLink }) {
-  const company = gratis.company || "dem Absender";
-  const claimed = formatEuro(gratis.amount_claimed);
-  const recoverable = formatEuro(gratis.amount_recoverable);
-  const riskLabel = gratis.risk === "high" ? "Hoch" : gratis.risk === "medium" ? "Mittel" : "Niedrig";
-  const riskColor = gratis.risk === "high" ? "#991b1b" : gratis.risk === "medium" ? "#b45309" : "#1a7a4a";
-
-  const html = `
-    <div style="font-family:Arial,sans-serif;max-width:680px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
-      <div style="background:#1b3a8c;color:#ffffff;padding:26px 30px;">
-        <h1 style="margin:0;font-size:20px;">Deine kostenlose Ersteinsch\u00e4tzung</h1>
-        <p style="margin:8px 0 0;color:#dbe7ff;font-size:14px;">Mahnung Check DE</p>
-      </div>
-      <div style="padding:28px 30px;">
-        <p style="font-size:16px;color:#111827;">Hallo <strong>${escapeHtml(name || "")}</strong>,</p>
-        <p style="font-size:15px;color:#374151;line-height:1.7;">Wir haben dein Schreiben von <strong>${escapeHtml(company)}</strong> analysiert. Hier ist deine kostenlose Ersteinsch\u00e4tzung:</p>
-
-        <div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:20px;margin:20px 0;">
-          <table style="width:100%;font-size:15px;color:#111827;">
-            <tr>
-              <td style="padding:8px 0;color:#6b7280;">Geforderter Betrag:</td>
-              <td style="padding:8px 0;font-weight:700;text-align:right;">${claimed || "unbekannt"}</td>
-            </tr>
-            <tr style="border-top:1px solid #e5e7eb;">
-              <td style="padding:8px 0;color:#6b7280;">M\u00f6glicherweise nicht berechtigt:</td>
-              <td style="padding:8px 0;font-weight:700;color:#1a7a4a;text-align:right;">${recoverable ? `bis zu ${recoverable}` : "wird gepr\u00fcft"}</td>
-            </tr>
-            <tr style="border-top:1px solid #e5e7eb;">
-              <td style="padding:8px 0;color:#6b7280;">Risiko-Einsch\u00e4tzung:</td>
-              <td style="padding:8px 0;font-weight:700;color:${riskColor};text-align:right;">${riskLabel}</td>
-            </tr>
-          </table>
-        </div>
-
-        ${gratis.teaser ? `<p style="font-size:14px;color:#374151;line-height:1.8;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:16px;">${escapeHtml(gratis.teaser)}</p>` : ""}
-
-        <div style="margin:24px 0;padding:20px;background:#f0f4ff;border-radius:12px;border:1px solid #c7d7ff;">
-          <p style="margin:0 0 12px;font-weight:700;font-size:15px;color:#1b3a8c;">M\u00f6chtest du die vollst\u00e4ndige Analyse?</p>
-          <p style="margin:0 0 16px;font-size:14px;color:#374151;">F\u00fcr \u20ac49 erh\u00e4ltst du innerhalb von 24 Stunden:</p>
-          <ul style="margin:0 0 16px;padding-left:20px;font-size:14px;color:#374151;line-height:1.8;">
-            <li>Vollst\u00e4ndige Analyse aller Widerspruchsgr\u00fcnde</li>
-            <li>Einsch\u00e4tzung deiner Chancen</li>
-            <li>Fertiger Widerspruchsbrief — direkt verwendbar</li>
-            <li>Konkrete n\u00e4chste Schritte</li>
-          </ul>
-          <a href="${stripeLink}" style="display:block;background:#1b3a8c;color:#ffffff;text-align:center;padding:16px;border-radius:8px;font-weight:700;font-size:15px;text-decoration:none;">Vollst\u00e4ndige Analyse freischalten — \u20ac49 \u2192</a>
-          <p style="text-align:center;margin:10px 0 0;font-size:12px;color:#9ca3af;">\ud83d\udd12 Sichere Zahlung \u00fcber Stripe</p>
-        </div>
-
-        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:14px 16px;">
-          <span style="font-size:13px;color:#991b1b;">Dies ist eine informative Ersteinsch\u00e4tzung, keine Rechtsberatung. Kein Anspruch auf Vollst\u00e4ndigkeit oder Richtigkeit.</span>
-        </div>
-      </div>
-    </div>
-  `;
-
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { "Authorization": `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from: "Mahnung Check DE <noreply@mahnungcheck.de>",
-      to: [email],
-      subject: "Deine kostenlose Ersteinsch\u00e4tzung — Mahnung Check DE",
-      html
-    })
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Gratis-Mail fehlgeschlagen: ${err}`);
-  }
-}
-__name(sendGratisEmail, "sendGratisEmail");
 
 async function sendAdminEmail(env, { customerName, customerEmail, triage, analysis }) {
   const rtfContent = maakRtf(analysis, customerName, customerEmail, triage);
@@ -299,9 +253,9 @@ async function sendAdminEmail(env, { customerName, customerEmail, triage, analys
           <p><strong>Name:</strong> ${escapeHtml(customerName || "")}</p>
           <p><strong>E-Mail:</strong> ${escapeHtml(customerEmail || "")}</p>
           <p><strong>Unternehmen:</strong> ${escapeHtml(triage?.company || "unbekannt")}</p>
-          <p><strong>Betrag:</strong> ${triage?.amount ? `\u20AC ${triage.amount}` : "unbekannt"}</p>
+          <p><strong>Betrag:</strong> ${triage?.amount ? `€ ${triage.amount}` : "unbekannt"}</p>
           <p><strong>Risiko:</strong> ${escapeHtml(triage?.risk || "")}</p>
-          <p style="color:#6b7280;font-size:0.9rem;">Vollst\u00e4ndige Analyse als RTF-Datei angeh\u00e4ngt.</p>
+          <p style="color:#6b7280;font-size:0.9rem;">Vollständige Analyse als RTF-Datei angehängt.</p>
         </div>
       `,
       attachments: [{ filename: "Mahnung-Analyse.rtf", content: rtfBase64 }]
@@ -328,7 +282,6 @@ var index_default = {
     }
     const url = new URL(request.url);
 
-    // Teaser triage voor landingspagina
     if (request.method === "POST" && url.pathname === "/analyze") {
       try {
         const formData = await request.formData();
@@ -342,7 +295,6 @@ var index_default = {
       }
     }
 
-    // Gratis analyse — stuurt mini-analyse mail naar klant
     if (request.method === "POST" && url.pathname === "/analyze-free") {
       try {
         const formData = await request.formData();
@@ -357,39 +309,38 @@ var index_default = {
         const { base64, mediaType } = await fileToBase64(file);
         const gratis = await handleGratisAnalyse(env, base64, mediaType);
 
-      const makePayload = {
-  name,
-  email,
-  company: gratis.company || "",
-  amount_claimed: String(gratis.amount_claimed || ""),
-  amount_recoverable: String(gratis.amount_recoverable || ""),
-  risk: gratis.risk || "medium",
-  teaser: gratis.teaser || "",
-  stripe_link: stripeLink,
-  created_at: new Date().toISOString()
-};
+        const makePayload = {
+          name,
+          email,
+          company: gratis.company || "",
+          amount_claimed: String(gratis.amount_claimed || ""),
+          amount_recoverable: String(gratis.amount_recoverable || ""),
+          risk: gratis.risk || "medium",
+          teaser: gratis.teaser || "",
+          stripe_link: stripeLink,
+          created_at: new Date().toISOString()
+        };
 
-const makeRes = await fetch("https://hook.eu1.make.com/x2sqrgvcb6om9d5f14c53wpp6ug2wpy9", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify(makePayload)
-});
+        const makeRes = await fetch("https://hook.eu1.make.com/x2sqrgvcb6om9d5f14c53wpp6ug2wpy9", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(makePayload)
+        });
 
-if (!makeRes.ok) {
-  const err = await makeRes.text();
-  throw new Error(`Make webhook fehlgeschlagen: ${err}`);
-}
+        if (!makeRes.ok) {
+          const err = await makeRes.text();
+          throw new Error(`Make webhook fehlgeschlagen: ${err}`);
+        }
 
-return jsonResponse({
-  ok: true,
-  message: "Deine kostenlose Ersteinsch\u00e4tzung wird per E-Mail versendet."
-});
+        return jsonResponse({
+          ok: true,
+          message: "Deine kostenlose Ersteinschätzung wird per E-Mail versendet."
+        });
       } catch (err) {
         return jsonResponse({ ok: false, error: err.message }, 500);
       }
     }
 
-    // Volledige analyse na betaling
     if (request.method === "POST" && url.pathname === "/submit") {
       try {
         const formData = await request.formData();
