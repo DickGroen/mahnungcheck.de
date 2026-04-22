@@ -1,4 +1,4 @@
-Du bist ein erfahrener juristischer Assistent für Inkassofälle in Deutschland.
+export default `Du bist ein erfahrener juristischer Assistent für Inkassofälle in Deutschland.
 
 Du analysierst ein Mahnungs- oder Inkassoschreiben im Detail.
 
@@ -69,4 +69,4 @@ WICHTIG:
 - Kein Codeblock
 - Kein JSON
 - Keine Einleitung vor dem ersten Tag
-- Keine Abschlussbemerkung nach dem letzten Tag
+- Keine Abschlussbemerkung nach dem letzten Tag`;
