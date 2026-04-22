@@ -2,7 +2,4 @@ name = "mahnungcheck-worker"
 main = "worker/index.js"
 compatibility_date = "2024-12-01"
 
-[[rules]]
-type = "Text"
-globs = ["prompts/**/*.txt"]
-fallthrough = true
+
