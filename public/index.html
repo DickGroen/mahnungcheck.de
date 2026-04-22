@@ -69,7 +69,7 @@
           Jetzt zahlen und Analyse starten →
         </a>
         <p class="optie-security">🔒 Sichere Zahlung über Stripe</p>
-        <p class="optie-guarantee">Nicht zufrieden? Geld zurück.</p>
+        <p class="optie-guarantee">Nicht zufrieden? Geld zurück — ohne Diskussion.</p>
       </div>
 
       <!-- OPTIE 2: GRATIS (secundair) -->
@@ -83,14 +83,16 @@
           <li>✓ Per E-Mail — innerhalb von 90 Minuten (Geschäftszeiten)</li>
         </ul>
         <div class="optie-price">Kostenlos</div>
-        <input type="text" id="gratis-name" placeholder="Dein Name" class="optie-input">
-        <input type="email" id="gratis-email" placeholder="Deine E-Mail-Adresse" class="optie-input">
         <input type="file" id="gratis-file-input" accept=".pdf,.jpg,.jpeg,.png"
                onchange="handleGratisFileSelect(this)" style="display:none;">
         <label class="upload-section upload-section--small" id="gratis-upload-zone" for="gratis-file-input">
           <div class="upload-label">Schreiben hochladen</div>
           <div class="upload-hint">PDF, JPG oder PNG · max. 10 MB</div>
         </label>
+        <div id="gratis-contact-fields" style="display:none;gap:8px;flex-direction:column;">
+          <input type="text" id="gratis-name" placeholder="Dein Name" class="optie-input">
+          <input type="email" id="gratis-email" placeholder="Deine E-Mail-Adresse" class="optie-input">
+        </div>
         <button class="optie-btn optie-btn--gratis" id="gratis-btn" onclick="startGratisUpload()" disabled>
           Kostenlose Einschätzung anfordern
         </button>
@@ -269,7 +271,7 @@
     </div>
     <div class="risk-reversal">
       <span class="risk-reversal__icon">💬</span>
-      <span>Nicht zufrieden mit deiner Analyse? Schreib uns — wir lösen es.</span>
+      <span>Du erhältst immer eine verwertbare Analyse — oder dein Geld zurück. Ohne Diskussion.</span>
     </div>
   </div>
 </section>
@@ -400,6 +402,11 @@ function handleGratisFileSelect(input) {
   gratisFile = input.files[0];
   const zone = document.getElementById('gratis-upload-zone');
   zone.innerHTML = `<div class="upload-label" style="color:var(--green);">✓ ${escapeHtmlLocal(gratisFile.name)}</div><div class="upload-hint">Datei ausgewählt</div>`;
+
+  // Contactvelden tonen na upload
+  const contactFields = document.getElementById('gratis-contact-fields');
+  contactFields.style.display = 'flex';
+
   checkGratisReady();
 }
 
