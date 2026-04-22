@@ -1,4 +1,4 @@
-import TRIAGE_PROMPT from '../prompts/triage.txt';
+import TRIAGE_PROMPT from '../prompts/triage.js';
 import { callClaudeDocument } from './claude.js';
 import { safeJsonParse } from './utils.js';
 
@@ -10,9 +10,7 @@ export async function handleTriage(env, fileBase64, mediaType) {
     fileBase64,
     mediaType
   });
-
   const parsed = safeJsonParse(raw);
-
   if (!parsed) {
     return {
       company: null,
@@ -22,7 +20,6 @@ export async function handleTriage(env, fileBase64, mediaType) {
       route: 'SONNET'
     };
   }
-
   return {
     company: parsed.company || null,
     amount: typeof parsed.amount === 'number' ? parsed.amount : null,
