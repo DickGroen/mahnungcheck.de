@@ -9,6 +9,7 @@ const modal = document.getElementById('modal');
 const stickyFooter = document.getElementById('sticky-footer');
 
 let latestTriage = null;
+let userHasInteracted = false; // sticky footer alleen na interactie
 
 if (uploadZone) {
   uploadZone.addEventListener('dragover', e => {
@@ -30,6 +31,7 @@ if (uploadZone) {
 
 function handleFile(input) {
   if (input.files && input.files[0]) {
+    userHasInteracted = true;
     processFile(input.files[0]);
   }
 }
@@ -51,7 +53,7 @@ async function processFile(file) {
   teaserSub.textContent = 'Bitte kurz warten...';
   teaserLockedText.innerHTML = `
     <strong>Vollständige Analyse nach Zahlung</strong>
-    Du erhältst eine detaillierte Einschätzung, mögliche Widerspruchsgründe und einen fertigen Widerspruch innerhalb von 24 Stunden per E-Mail.
+    Du erhältst eine detaillierte Einschätzung, mögliche Widerspruchsgründe und einen fertigen Widerspruch bis morgen 16:00 Uhr per E-Mail.
   `;
 
   try {
@@ -72,25 +74,30 @@ async function processFile(file) {
     latestTriage = data;
 
     const company = data.company || 'Unbekannter Absender';
-    const amount = typeof data.amount === 'number' ? formatEuro(data.amount) : 'unbekannt';
-    const daysLeft = typeof data.days_left === 'number' ? data.days_left : 'wenige';
-    const riskText = getRiskText(data.risk);
+    const amount = typeof data.amount === 'number' ? formatEuro(data.amount) : null;
+    const daysLeft = typeof data.days_left === 'number' ? data.days_left : null;
+    const issueCount = getIssueCount(data.risk);
 
+    // Teaserkop: bedrijf + bedrag
     teaserCompany.textContent = company;
-    teaserFound.textContent = `Mahnung von ${company} erkannt — Betrag: ${amount}`;
-    teaserSub.textContent = `⏳ Noch ${daysLeft} Tage Zeit. Erste Einschätzung: ${riskText}`;
-    teaserLockedText.innerHTML = `
-      <strong>Vollständige Analyse nach Zahlung</strong>
-      Du erhältst eine detaillierte Einschätzung, mögliche Widerspruchsgründe und einen fertigen Widerspruch innerhalb von 24 Stunden per E-Mail.
-    `;
+
+    // Hoofdregel: concreet wat er gevonden is
+    teaserFound.textContent = amount
+      ? `Schreiben von ${company} erkannt — Forderung: ${amount}`
+      : `Schreiben von ${company} erkannt`;
+
+    // Subline: combinatie van issues + deadline druk
+    teaserSub.textContent = buildSubline(issueCount, daysLeft, data.risk);
+
+    // Locked tekst: concreet wat achter de paywall zit
+    teaserLockedText.innerHTML = buildLockedText(issueCount, company, amount);
 
     setTimeout(() => {
       teaser.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, 100);
 
-    setTimeout(() => {
-      openModal();
-    }, 700);
+    // Modal NIET automatisch openen — gebruiker klikt zelf op CTA
+
   } catch (err) {
     latestTriage = null;
 
@@ -99,15 +106,50 @@ async function processFile(file) {
     teaserSub.textContent = 'Du kannst trotzdem mit der vollständigen Analyse fortfahren.';
     teaserLockedText.innerHTML = `
       <strong>Vollständige Analyse nach Zahlung</strong>
-      Du erhältst eine detaillierte Einschätzung und einen fertigen Widerspruch innerhalb von 24 Stunden per E-Mail.
+      Du erhältst eine detaillierte Einschätzung und einen fertigen Widerspruch bis morgen 16:00 Uhr per E-Mail.
     `;
   }
 }
 
-function getRiskText(risk) {
-  if (risk === 'high') return 'erhöhtes Risiko für überhöhte oder unklare Forderung';
-  if (risk === 'medium') return 'einige Punkte sollten genauer geprüft werden';
-  return 'eine Prüfung kann sich trotzdem lohnen';
+// Hoeveel mogelijke problemen suggereren we op basis van risk?
+function getIssueCount(risk) {
+  if (risk === 'high') return 3;
+  if (risk === 'medium') return 2;
+  return 1;
+}
+
+// Subline: urgentie via days_left + concrete probleemtelling
+function buildSubline(issueCount, daysLeft, risk) {
+  const issueStr = issueCount === 1
+    ? '1 mögliches Problem gefunden'
+    : `${issueCount} mögliche Probleme gefunden`;
+
+  if (daysLeft !== null && daysLeft <= 7) {
+    return `⚠️ ${issueStr} — noch ${daysLeft} Tage bis zur Frist. Jetzt prüfen.`;
+  }
+  if (daysLeft !== null && daysLeft <= 14) {
+    return `${issueStr} — Frist in ${daysLeft} Tagen. Lohnt sich zu prüfen.`;
+  }
+  if (risk === 'high') {
+    return `⚠️ ${issueStr} — diese Forderung sollte dringend geprüft werden.`;
+  }
+  return `${issueStr} — vollständige Analyse empfohlen.`;
+}
+
+// Locked tekst: concreet maken wat de gebruiker krijgt na betaling
+function buildLockedText(issueCount, company, amount) {
+  const issueStr = issueCount === 1
+    ? '1 möglichen Widerspruchsgrund'
+    : `${issueCount} mögliche Widerspruchsgründe`;
+
+  const amountStr = amount ? ` über ${amount}` : '';
+
+  return `
+    <strong>Vollständige Analyse nach Zahlung</strong>
+    Wir haben bei dieser Forderung von ${company}${amountStr} ${issueStr} identifiziert.
+    Nach der Zahlung erhältst du die vollständige Erklärung, eine Einschätzung deiner Chancen
+    und einen fertigen Widerspruchsbrief — bis morgen 16:00 Uhr per E-Mail.
+  `;
 }
 
 function formatEuro(value) {
@@ -126,10 +168,12 @@ function escapeHtml(str) {
     .replaceAll("'", '&#039;');
 }
 
+// Sticky footer: alleen tonen na interactie (upload) én voldoende scrollen
 window.addEventListener('scroll', () => {
   if (!stickyFooter) return;
+  if (!userHasInteracted) return;
 
-  if (window.scrollY > 500) {
+  if (window.scrollY > 300) {
     stickyFooter.classList.add('visible');
   } else {
     stickyFooter.classList.remove('visible');
@@ -149,11 +193,15 @@ function openModal() {
       const company = latestTriage.company || 'dem angegebenen Unternehmen';
       const amount = typeof latestTriage.amount === 'number'
         ? formatEuro(latestTriage.amount)
-        : '';
+        : null;
+      const issueCount = getIssueCount(latestTriage.risk);
+      const issueStr = issueCount === 1
+        ? '1 möglichen Widerspruchsgrund'
+        : `${issueCount} mögliche Widerspruchsgründe`;
 
       modalDynamic.textContent = amount
-        ? `Wir haben bereits ein Schreiben von ${company} mit einem Betrag von ${amount} erkannt. Die vollständige Prüfung folgt nach der Zahlung.`
-        : `Wir haben bereits erste Hinweise erkannt. Die vollständige Prüfung folgt nach der Zahlung.`;
+        ? `Wir haben bei der Forderung von ${company} (${amount}) ${issueStr} identifiziert. Die vollständige Prüfung folgt nach der Zahlung.`
+        : `Wir haben ${issueStr} identifiziert. Die vollständige Prüfung folgt nach der Zahlung.`;
     } else {
       modalDynamic.textContent = 'Wir haben bereits erste Hinweise erkannt. Die vollständige Prüfung folgt nach der Zahlung.';
     }
