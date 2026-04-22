@@ -80,7 +80,7 @@
         <ul class="optie-list">
           <li>✓ Absender und Betrag erkannt</li>
           <li>✓ Erste Risikoeinschätzung</li>
-          <li>✓ Per E-Mail — Sie erhalten Ihre Einschätzung spätestens am nächsten Werktag vor 16:00 Uhr per E-Mail. (Geschäftszeiten)</li>
+          <li>✓ Per E-Mail — Einschätzung spätestens am nächsten Werktag vor 16:00 Uhr</li>
         </ul>
         <div class="optie-price">Kostenlos</div>
         <input type="file" id="gratis-file-input" accept=".pdf,.jpg,.jpeg,.png"
@@ -214,8 +214,8 @@
     <h2>Was andere Nutzer sagen</h2>
     <div class="reviews">
       <div class="review">
+        <div class="stars">★★★★★</div>
         <div class="review__text">&ldquo;Intrum wollte &euro;340 von mir &mdash; laut Analyse war die Forderung verj&auml;hrt. Widerspruch eingelegt, seitdem nichts mehr geh&ouml;rt.&rdquo;</div>
-        <div class="review__text">"Ich hatte schon beschlossen zu zahlen. Am Ende stellte sich heraus, dass die Forderung verjährt war. Sehr froh, dass ich das vorher prüfen ließ."</div>
         <div class="review__author">Markus V. — Berlin</div>
       </div>
       <div class="review">
@@ -403,7 +403,6 @@ function handleGratisFileSelect(input) {
   const zone = document.getElementById('gratis-upload-zone');
   zone.innerHTML = `<div class="upload-label" style="color:var(--green);">✓ ${escapeHtmlLocal(gratisFile.name)}</div><div class="upload-hint">Datei ausgewählt</div>`;
 
-  // Contactvelden tonen na upload
   const contactFields = document.getElementById('gratis-contact-fields');
   contactFields.style.display = 'flex';
 
@@ -447,7 +446,7 @@ async function startGratisUpload() {
     const data = await res.json();
     if (data.ok) {
       status.className = 'optie-status optie-status--success';
-      status.textContent = '✓ Deine Einschätzung wird dir Sie erhalten Ihre Einschätzung spätestens am nächsten Werktag vor 16:00 Uhr per E-Mail. während der Geschäftszeiten (Mo–Fr, 9:00–17:00 Uhr) per E-Mail zugesendet.';
+      status.textContent = '✓ Sie erhalten Ihre Einschätzung spätestens am nächsten Werktag vor 16:00 Uhr per E-Mail.';
       btn.textContent = 'Gesendet ✓';
     } else {
       throw new Error(data.error || 'Fehler');
