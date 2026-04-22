@@ -2,4 +2,9 @@ name = "mahnungcheck"
 main = "worker/index.js"
 compatibility_date = "2024-12-01"
 
+[[kv_namespaces]]
+binding = "MAHNUNG_QUEUE"
+id = "394807db041c4b83907c9f6818a4184b"
 
+[triggers]
+crons = ["0 13 * * 1-5"]
