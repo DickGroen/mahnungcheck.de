@@ -37,6 +37,7 @@ body {
   color: var(--ink);
   background: var(--white);
   -webkit-font-smoothing: antialiased;
+  cursor: auto;
 }
 
 h1, h2, h3, h4 {
@@ -87,6 +88,7 @@ a {
   display: flex;
   align-items: center;
   gap: 8px;
+  cursor: default;
 }
 
 .logo-dot {
@@ -905,6 +907,7 @@ a {
   color: var(--ink);
   background: var(--white);
   outline: none;
+  cursor: text;
 }
 
 .optie-input:focus {
@@ -934,20 +937,24 @@ a {
 .optie-btn--gratis {
   background: var(--green);
   color: var(--white);
+  cursor: pointer;
 }
 
-.optie-btn--gratis:hover {
+.optie-btn--gratis:hover:not(:disabled) {
   background: #155d38;
+  cursor: pointer;
 }
 
 .optie-btn--gratis:disabled {
   opacity: 0.5;
-  cursor: not-allowed;
+  cursor: not-allowed !important;
+  pointer-events: none;
 }
 
 .optie-btn--betaald {
   background: var(--accent);
   color: var(--white);
+  cursor: pointer;
 }
 
 .optie-btn--betaald:hover {
