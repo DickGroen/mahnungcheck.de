@@ -80,7 +80,7 @@
         <ul class="optie-list">
           <li>✓ Absender und Betrag erkannt</li>
           <li>✓ Erste Risikoeinschätzung</li>
-          <li>✓ Per E-Mail — innerhalb von 90 Minuten (Geschäftszeiten)</li>
+          <li>✓ Per E-Mail — Sie erhalten Ihre Einschätzung spätestens am nächsten Werktag vor 16:00 Uhr per E-Mail. (Geschäftszeiten)</li>
         </ul>
         <div class="optie-price">Kostenlos</div>
         <input type="file" id="gratis-file-input" accept=".pdf,.jpg,.jpeg,.png"
@@ -447,7 +447,7 @@ async function startGratisUpload() {
     const data = await res.json();
     if (data.ok) {
       status.className = 'optie-status optie-status--success';
-      status.textContent = '✓ Deine Einschätzung wird dir innerhalb von 90 Minuten während der Geschäftszeiten (Mo–Fr, 9:00–17:00 Uhr) per E-Mail zugesendet.';
+      status.textContent = '✓ Deine Einschätzung wird dir Sie erhalten Ihre Einschätzung spätestens am nächsten Werktag vor 16:00 Uhr per E-Mail. während der Geschäftszeiten (Mo–Fr, 9:00–17:00 Uhr) per E-Mail zugesendet.';
       btn.textContent = 'Gesendet ✓';
     } else {
       throw new Error(data.error || 'Fehler');
