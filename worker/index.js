@@ -118,20 +118,28 @@ function rtfEscape(str) {
     .replace(/[^\x00-\x7F]/g, c => `\\u${c.charCodeAt(0)}?`);
 }
 
-function maakRtf(analysis, customerName, customerEmail, triage) {
+function rtfToBase64(rtfString) {
+  const bytes = new TextEncoder().encode(rtfString);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+
+// Analyse RTF — samenvatting, problempunten met interlinie, einschätzung, volgende stappen
+function maakAnalyseRtf(analysis, customerName, customerEmail, triage) {
   const title = extractTaggedSection(analysis, "TITLE") || "Mahnung-Analyse";
   const summary = extractTaggedSection(analysis, "SUMMARY");
   const issues = extractTaggedSection(analysis, "ISSUES");
   const assessment = extractTaggedSection(analysis, "ASSESSMENT");
   const nextSteps = extractTaggedSection(analysis, "NEXT_STEPS");
-  const objection = extractTaggedSection(analysis, "OBJECTION");
 
+  // Elke bullet krijgt een lege regel erna (interlinie via \sb200)
   const issueLines = String(issues || "").split("\n").map(l => l.trim()).filter(Boolean)
-    .map(l => `\\par\\pard\\fi-300\\li300 \\bullet  ${rtfEscape(l.replace(/^- /, ""))}`)
+    .map(l => `{\\pard\\sb0\\sa200\\fi-300\\li300\\f1\\fs22 \\bullet  ${rtfEscape(l.replace(/^- /, ""))}\\par}`)
     .join("\n");
 
   const nextLines = String(nextSteps || "").split("\n").map(l => l.trim()).filter(Boolean)
-    .map(l => `\\par\\pard\\fi-300\\li300 \\bullet  ${rtfEscape(l.replace(/^- /, ""))}`)
+    .map(l => `{\\pard\\sb0\\sa200\\fi-300\\li300\\f1\\fs22 \\bullet  ${rtfEscape(l.replace(/^- /, ""))}\\par}`)
     .join("\n");
 
   return `{\\rtf1\\ansi\\deff0
@@ -140,29 +148,74 @@ function maakRtf(analysis, customerName, customerEmail, triage) {
 \\paperw11906\\paperh16838\\margl1800\\margr1800\\margt1440\\margb1440
 \\f1\\fs22
 {\\pard\\sb400\\sa200\\f1\\fs32\\b\\cf1 ${rtfEscape(title)}\\par}
-{\\pard\\sb200\\sa100\\f1\\fs20\\cf0 Kunde: ${rtfEscape(customerName || "")} (${rtfEscape(customerEmail || "")})\\par}
+{\\pard\\sb0\\sa100\\f1\\fs20\\cf0 Kunde: ${rtfEscape(customerName || "")} (${rtfEscape(customerEmail || "")})\\par}
 {\\pard\\sb0\\sa200\\f1\\fs20\\cf0 Unternehmen: ${rtfEscape(triage?.company || "unbekannt")} | Betrag: ${triage?.amount ? `\\u8364? ${triage.amount}` : "unbekannt"} | Risiko: ${rtfEscape(triage?.risk || "")}\\par}
-{\\pard\\sb300\\sa100\\f1\\fs24\\b Zusammenfassung\\par}
+{\\pard\\sb300\\sa120\\f1\\fs24\\b Zusammenfassung\\par}
 {\\pard\\sa200\\f1\\fs22 ${rtfEscape(summary)}\\par}
-{\\pard\\sb300\\sa100\\f1\\fs24\\b M\\u246?gliche Problempunkte\\par}
+{\\pard\\sb300\\sa120\\f1\\fs24\\b M\\u246?gliche Problempunkte\\par}
 ${issueLines}
-{\\pard\\sa200\\par}
-{\\pard\\sb300\\sa100\\f1\\fs24\\b Einsch\\u228?tzung\\par}
+{\\pard\\sb300\\sa120\\f1\\fs24\\b Einsch\\u228?tzung\\par}
 {\\pard\\sa200\\f1\\fs22 ${rtfEscape(assessment)}\\par}
-{\\pard\\sb300\\sa100\\f1\\fs24\\b N\\u228?chste Schritte\\par}
+{\\pard\\sb300\\sa120\\f1\\fs24\\b N\\u228?chste Schritte\\par}
 ${nextLines}
-{\\pard\\sa200\\par}
-{\\pard\\sb300\\sa100\\f1\\fs24\\b\\cf2 Widerspruchsbrief\\par}
-{\\pard\\sa200\\f1\\fs22\\cf0 ${rtfEscape(objection)}\\par}
 {\\pard\\sb400\\sa100\\f1\\fs18\\cf0\\i Hinweis: Dies ist eine informative Analyse und keine Rechtsberatung.\\par}
 }`;
 }
 
-function rtfToBase64(rtfString) {
-  const bytes = new TextEncoder().encode(rtfString);
-  let binary = "";
-  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-  return btoa(binary);
+// Bezwaarbrief RTF — alleen de Widerspruch
+function maakWiderspruchRtf(analysis, customerName, triage) {
+  const objection = extractTaggedSection(analysis, "OBJECTION");
+
+  return `{\\rtf1\\ansi\\deff0
+{\\fonttbl{\\f0\\froman\\fcharset0 Times New Roman;}{\\f1\\fswiss\\fcharset0 Arial;}}
+{\\colortbl;\\red27\\green58\\blue140;\\red153\\green26\\blue26;}
+\\paperw11906\\paperh16838\\margl1800\\margr1800\\margt1440\\margb1440
+\\f1\\fs22
+{\\pard\\sb400\\sa200\\f1\\fs28\\b\\cf2 Widerspruchsbrief\\par}
+{\\pard\\sb0\\sa200\\f1\\fs20\\cf0 Erstellt f\\u252?r: ${rtfEscape(customerName || "")} | Unternehmen: ${rtfEscape(triage?.company || "unbekannt")}\\par}
+{\\pard\\sb300\\sa200\\f1\\fs22\\cf0 ${rtfEscape(objection)}\\par}
+{\\pard\\sb400\\sa100\\f1\\fs18\\cf0\\i Hinweis: Dies ist ein Entwurf. Ein Widerspruch setzt die Zahlung nicht automatisch aus. Bei Unsicherheit empfehlen wir, einen Anwalt zu konsultieren.\\par}
+}`;
+}
+
+// Admin RTF (voor admin mail — bevat alles inclusief bezwaarbrief)
+function maakAdminRtf(analysis, customerName, customerEmail, triage) {
+  const title = extractTaggedSection(analysis, "TITLE") || "Mahnung-Analyse";
+  const summary = extractTaggedSection(analysis, "SUMMARY");
+  const issues = extractTaggedSection(analysis, "ISSUES");
+  const assessment = extractTaggedSection(analysis, "ASSESSMENT");
+  const nextSteps = extractTaggedSection(analysis, "NEXT_STEPS");
+  const objection = extractTaggedSection(analysis, "OBJECTION");
+
+  const issueLines = String(issues || "").split("\n").map(l => l.trim()).filter(Boolean)
+    .map(l => `{\\pard\\sb0\\sa200\\fi-300\\li300\\f1\\fs22 \\bullet  ${rtfEscape(l.replace(/^- /, ""))}\\par}`)
+    .join("\n");
+
+  const nextLines = String(nextSteps || "").split("\n").map(l => l.trim()).filter(Boolean)
+    .map(l => `{\\pard\\sb0\\sa200\\fi-300\\li300\\f1\\fs22 \\bullet  ${rtfEscape(l.replace(/^- /, ""))}\\par}`)
+    .join("\n");
+
+  return `{\\rtf1\\ansi\\deff0
+{\\fonttbl{\\f0\\froman\\fcharset0 Times New Roman;}{\\f1\\fswiss\\fcharset0 Arial;}}
+{\\colortbl;\\red27\\green58\\blue140;\\red153\\green26\\blue26;}
+\\paperw11906\\paperh16838\\margl1800\\margr1800\\margt1440\\margb1440
+\\f1\\fs22
+{\\pard\\sb400\\sa200\\f1\\fs32\\b\\cf1 ${rtfEscape(title)}\\par}
+{\\pard\\sb0\\sa100\\f1\\fs20\\cf0 Kunde: ${rtfEscape(customerName || "")} (${rtfEscape(customerEmail || "")})\\par}
+{\\pard\\sb0\\sa200\\f1\\fs20\\cf0 Unternehmen: ${rtfEscape(triage?.company || "unbekannt")} | Betrag: ${triage?.amount ? `\\u8364? ${triage.amount}` : "unbekannt"} | Risiko: ${rtfEscape(triage?.risk || "")}\\par}
+{\\pard\\sb300\\sa120\\f1\\fs24\\b Zusammenfassung\\par}
+{\\pard\\sa200\\f1\\fs22 ${rtfEscape(summary)}\\par}
+{\\pard\\sb300\\sa120\\f1\\fs24\\b M\\u246?gliche Problempunkte\\par}
+${issueLines}
+{\\pard\\sb300\\sa120\\f1\\fs24\\b Einsch\\u228?tzung\\par}
+{\\pard\\sa200\\f1\\fs22 ${rtfEscape(assessment)}\\par}
+{\\pard\\sb300\\sa120\\f1\\fs24\\b N\\u228?chste Schritte\\par}
+${nextLines}
+{\\pard\\sa200\\par}
+{\\pard\\sb300\\sa120\\f1\\fs24\\b\\cf2 Widerspruchsbrief\\par}
+{\\pard\\sa200\\f1\\fs22\\cf0 ${rtfEscape(objection)}\\par}
+{\\pard\\sb400\\sa100\\f1\\fs18\\cf0\\i Hinweis: Dies ist eine informative Analyse und keine Rechtsberatung.\\par}
+}`;
 }
 
 // ── Handlers ──────────────────────────────────────────────────────────────────
@@ -249,54 +302,6 @@ function buildGratisMailHtml({ name, company, amount_claimed, amount_recoverable
   `;
 }
 
-function buildPaidCustomerMailHtml({ name, analysis, triage }) {
-  const title = extractTaggedSection(analysis, "TITLE") || "Deine Mahnung-Analyse";
-  const summary = extractTaggedSection(analysis, "SUMMARY");
-  const issues = extractTaggedSection(analysis, "ISSUES");
-  const assessment = extractTaggedSection(analysis, "ASSESSMENT");
-  const nextSteps = extractTaggedSection(analysis, "NEXT_STEPS");
-  const objection = extractTaggedSection(analysis, "OBJECTION");
-
-  const issueLines = String(issues || "").split("\n").map(l => l.trim()).filter(Boolean)
-    .map(l => `<li style="margin-bottom:6px;">${escapeHtml(l.replace(/^- /, ""))}</li>`)
-    .join("");
-
-  const nextLines = String(nextSteps || "").split("\n").map(l => l.trim()).filter(Boolean)
-    .map(l => `<li style="margin-bottom:6px;">${escapeHtml(l.replace(/^- /, ""))}</li>`)
-    .join("");
-
-  return `
-    <div style="font-family:Arial,sans-serif;max-width:640px;margin:0 auto;color:#1f2937;">
-      <h2 style="color:#1d3a6e;">${escapeHtml(title)}</h2>
-      <p>Hallo ${escapeHtml(name)},</p>
-      <p>hier ist deine vollständige Analyse deines Schreibens von
-        <strong>${escapeHtml(triage?.company || "unbekanntem Absender")}</strong>.
-      </p>
-
-      <h3 style="color:#1d3a6e;margin-top:24px;">Zusammenfassung</h3>
-      <p style="line-height:1.7;">${escapeHtml(summary)}</p>
-
-      <h3 style="color:#1d3a6e;margin-top:24px;">Mögliche Problempunkte</h3>
-      <ul style="padding-left:20px;line-height:1.7;">${issueLines}</ul>
-
-      <h3 style="color:#1d3a6e;margin-top:24px;">Einschätzung</h3>
-      <p style="line-height:1.7;">${escapeHtml(assessment)}</p>
-
-      <h3 style="color:#1d3a6e;margin-top:24px;">Nächste Schritte</h3>
-      <ul style="padding-left:20px;line-height:1.7;">${nextLines}</ul>
-
-      <h3 style="color:#b91c1c;margin-top:24px;">Widerspruchsbrief</h3>
-      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:20px 24px;white-space:pre-wrap;font-size:0.9rem;line-height:1.8;">${escapeHtml(objection)}</div>
-
-      <p style="color:#6b7280;font-size:0.82rem;margin-top:32px;border-top:1px solid #e5e7eb;padding-top:16px;">
-        Hinweis: Dies ist eine informative Analyse und keine Rechtsberatung.
-        Ein Widerspruch setzt die Zahlung nicht automatisch aus.
-        Bei komplexen Situationen oder hohen Beträgen empfehlen wir, einen Anwalt oder die Verbraucherzentrale zu konsultieren.
-      </p>
-    </div>
-  `;
-}
-
 // ── Mailers ───────────────────────────────────────────────────────────────────
 
 async function sendAdminGratisNotification(env, { name, email, gratis, stripeLink }) {
@@ -336,7 +341,7 @@ async function sendAdminGratisNotification(env, { name, email, gratis, stripeLin
 }
 
 async function sendAdminPaidNotification(env, { customerName, customerEmail, triage, analysis }) {
-  const rtfContent = maakRtf(analysis, customerName, customerEmail, triage);
+  const rtfContent = maakAdminRtf(analysis, customerName, customerEmail, triage);
   const rtfBase64 = rtfToBase64(rtfContent);
 
   const res = await fetch("https://api.resend.com/emails", {
@@ -350,7 +355,7 @@ async function sendAdminPaidNotification(env, { customerName, customerEmail, tri
       html: `
         <div style="font-family:Arial,sans-serif;max-width:720px;margin:0 auto;">
           <p style="background:#f3f4f6;padding:10px 14px;border-radius:6px;font-size:0.85rem;color:#6b7280;">
-            📬 Klantmail wordt morgen om 15:00 verstuurd naar <strong>${escapeHtml(customerEmail)}</strong>
+            📬 Klantmail (2 bijlagen) wordt morgen om 15:00 verstuurd naar <strong>${escapeHtml(customerEmail)}</strong>
           </p>
           <h2>Neue bezahlte Mahnung-Analyse</h2>
           <p><strong>Name:</strong> ${escapeHtml(customerName || "")}</p>
@@ -400,11 +405,8 @@ async function sendDelayedGratisEmail(env, entry) {
 }
 
 async function sendDelayedPaidEmail(env, entry) {
-  const html = buildPaidCustomerMailHtml({
-    name: entry.name,
-    analysis: entry.analysis,
-    triage: entry.triage
-  });
+  const analyseRtf = maakAnalyseRtf(entry.analysis, entry.name, entry.email, entry.triage);
+  const widerspruchRtf = maakWiderspruchRtf(entry.analysis, entry.name, entry.triage);
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -413,7 +415,27 @@ async function sendDelayedPaidEmail(env, entry) {
       from: "Mahnung Check DE <noreply@mahnungcheck.de>",
       to: [entry.email],
       subject: "Deine vollständige Mahnung-Analyse – Mahnung Check DE",
-      html
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#1f2937;">
+          <h2 style="color:#1d3a6e;">Deine vollständige Analyse ist fertig</h2>
+          <p>Hallo ${escapeHtml(entry.name)},</p>
+          <p>im Anhang findest du zwei Dateien:</p>
+          <ul style="line-height:1.9;">
+            <li><strong>Mahnung-Analyse.rtf</strong> — vollständige Analyse mit allen Prüfpunkten, Einschätzung und nächsten Schritten</li>
+            <li><strong>Widerspruchsbrief.rtf</strong> — fertiger Widerspruch, direkt verwendbar</li>
+          </ul>
+          <p>Unternehmen: <strong>${escapeHtml(entry.triage?.company || "unbekannt")}</strong></p>
+          <p style="color:#6b7280;font-size:0.85rem;margin-top:32px;">
+            Hinweis: Dies ist eine informative Analyse und keine Rechtsberatung.
+            Ein Widerspruch setzt die Zahlung nicht automatisch aus.
+            Bei Unsicherheit empfehlen wir, einen Anwalt oder die Verbraucherzentrale zu konsultieren.
+          </p>
+        </div>
+      `,
+      attachments: [
+        { filename: "Mahnung-Analyse.rtf", content: rtfToBase64(analyseRtf) },
+        { filename: "Widerspruchsbrief.rtf", content: rtfToBase64(widerspruchRtf) }
+      ]
     })
   });
 
@@ -494,7 +516,6 @@ export default {
         const { base64, mediaType } = await fileToBase64(file);
         const gratis = await handleGratisAnalyse(env, base64, mediaType);
 
-        // Opslaan in KV — klantmail volgt volgende werkdag om 15:00
         const kvKey = `gratis:${Date.now()}:${email}`;
         await env.MAHNUNG_QUEUE.put(kvKey, JSON.stringify({
           type: "gratis",
@@ -508,7 +529,6 @@ export default {
           created_at: new Date().toISOString()
         }));
 
-        // Admin notificatie direct
         try {
           await sendAdminGratisNotification(env, { name, email, gratis, stripeLink });
         } catch (_) {}
@@ -538,7 +558,6 @@ export default {
           fileBase64: base64, mediaType, route: triage.route
         });
 
-        // Opslaan in KV — klantmail volgt volgende werkdag om 15:00
         const kvKey = `paid:${Date.now()}:${email}`;
         await env.MAHNUNG_QUEUE.put(kvKey, JSON.stringify({
           type: "paid",
@@ -548,7 +567,6 @@ export default {
           created_at: new Date().toISOString()
         }));
 
-        // Admin krijgt analyse direct met RTF
         await sendAdminPaidNotification(env, {
           customerName: name, customerEmail: email, triage, analysis
         });
