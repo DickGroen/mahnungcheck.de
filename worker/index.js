@@ -207,6 +207,64 @@ async function generateAnalysis(env, { fileBase64, mediaType, route }) {
   return raw || "";
 }
 
+async function sendGratisEmail(env, { customerName, customerEmail, gratis, stripeLink }) {
+  const riskLabel = { low: "Niedrig", medium: "Mittel", high: "Hoch" }[gratis.risk] || gratis.risk;
+  const amountClaimed = gratis.amount_claimed ? `€ ${gratis.amount_claimed.toFixed(2)}` : "unbekannt";
+  const amountRecoverable = gratis.amount_recoverable ? `€ ${gratis.amount_recoverable.toFixed(2)}` : null;
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: "Mahnung Check DE <noreply@mahnungcheck.de>",
+      to: [customerEmail],
+      subject: "Deine kostenlose Ersteinschätzung – Mahnung Check DE",
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#1f2937;">
+          <h2 style="color:#1d3a6e;">Deine kostenlose Ersteinschätzung</h2>
+          <p>Hallo ${escapeHtml(customerName)},</p>
+          <p>wir haben dein Schreiben von <strong>${escapeHtml(gratis.company || "unbekanntem Absender")}</strong> analysiert.</p>
+
+          <table style="width:100%;border-collapse:collapse;margin:24px 0;">
+            <tr style="background:#f3f4f6;">
+              <td style="padding:10px 14px;font-weight:bold;">Geforderter Betrag</td>
+              <td style="padding:10px 14px;">${amountClaimed}</td>
+            </tr>
+            ${amountRecoverable ? `
+            <tr>
+              <td style="padding:10px 14px;font-weight:bold;">Möglicherweise nicht berechtigt</td>
+              <td style="padding:10px 14px;color:#b91c1c;font-weight:bold;">${amountRecoverable}</td>
+            </tr>` : ""}
+            <tr style="background:#f3f4f6;">
+              <td style="padding:10px 14px;font-weight:bold;">Risiko-Einschätzung</td>
+              <td style="padding:10px 14px;">${riskLabel}</td>
+            </tr>
+          </table>
+
+          <p style="background:#fef9c3;border-left:4px solid #eab308;padding:12px 16px;border-radius:4px;">
+            ${escapeHtml(gratis.teaser || "Teile der Forderung könnten möglicherweise nicht berechtigt sein.")}
+          </p>
+
+          <p>Für eine vollständige Analyse mit fertigem Widerspruchsbrief:</p>
+          <a href="${stripeLink}" style="display:inline-block;background:#1d3a6e;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold;margin:8px 0;">
+            Vollständige Analyse für €49 →
+          </a>
+
+          <p style="color:#6b7280;font-size:0.85rem;margin-top:32px;">
+            Hinweis: Dies ist eine informative Ersteinschätzung und keine Rechtsberatung.
+            Bei komplexen Situationen empfehlen wir, einen Anwalt oder die Verbraucherzentrale zu kontaktieren.
+          </p>
+        </div>
+      `
+    })
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Gratis-Mail fehlgeschlagen: ${err}`);
+  }
+}
+
 async function sendAdminEmail(env, { customerName, customerEmail, triage, analysis }) {
   const rtfContent = maakRtf(analysis, customerName, customerEmail, triage);
   const rtfBase64 = rtfToBase64(rtfContent);
@@ -282,28 +340,26 @@ export default {
         const { base64, mediaType } = await fileToBase64(file);
         const gratis = await handleGratisAnalyse(env, base64, mediaType);
 
-        const makePayload = {
-          name,
-          email,
-          company: gratis.company || "",
-          amount_claimed: String(gratis.amount_claimed || ""),
-          amount_recoverable: String(gratis.amount_recoverable || ""),
-          risk: gratis.risk || "medium",
-          teaser: gratis.teaser || "",
-          stripe_link: stripeLink,
-          created_at: new Date().toISOString()
-        };
+        // Mail direct naar gebruiker via Resend
+        await sendGratisEmail(env, { customerName: name, customerEmail: email, gratis, stripeLink });
 
-        const makeRes = await fetch("https://hook.eu1.make.com/x2sqrgvcb6om9d5f14c53wpp6ug2wpy9", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(makePayload)
-        });
-
-        if (!makeRes.ok) {
-          const err = await makeRes.text();
-          throw new Error(`Make webhook fehlgeschlagen: ${err}`);
-        }
+        // Webhook naar Make (optioneel, voor logging — fout blokkeert de flow niet)
+        try {
+          await fetch("https://hook.eu1.make.com/x2sqrgvcb6om9d5f14c53wpp6ug2wpy9", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name, email,
+              company: gratis.company || "",
+              amount_claimed: String(gratis.amount_claimed || ""),
+              amount_recoverable: String(gratis.amount_recoverable || ""),
+              risk: gratis.risk || "medium",
+              teaser: gratis.teaser || "",
+              stripe_link: stripeLink,
+              created_at: new Date().toISOString()
+            })
+          });
+        } catch (_) {}
 
         return jsonResponse({
           ok: true,
