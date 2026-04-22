@@ -79,18 +79,20 @@ async function processFile(file) {
     const issueCount = getIssueCount(data.risk);
 
     // Teaserkop: bedrijf + bedrag
-    teaserCompany.textContent = company;
+    teaserCompany.textContent = amount
+      ? `${company} — ${amount}`
+      : company;
 
-    // Hoofdregel: concreet wat er gevonden is
-    teaserFound.textContent = amount
-      ? `Schreiben von ${company} erkannt — Forderung: ${amount}`
-      : `Schreiben von ${company} erkannt`;
+    // Hoofdregel: aantal gevonden problemen, direct en concreet
+    teaserFound.textContent = issueCount === 1
+      ? '⚠️ 1 mögliches Problem erkannt'
+      : `⚠️ ${issueCount} mögliche Probleme erkannt`;
 
-    // Subline: combinatie van issues + deadline druk
-    teaserSub.textContent = buildSubline(issueCount, daysLeft, data.risk);
+    // Subline: deadline urgentie
+    teaserSub.textContent = buildSubline(daysLeft, data.risk);
 
-    // Locked tekst: concreet wat achter de paywall zit
-    teaserLockedText.innerHTML = buildLockedText(issueCount, company, amount);
+    // Locked tekst: bulletpoints met concrete issues + CTA
+    teaserLockedText.innerHTML = buildLockedText(issueCount, company, amount, data.risk);
 
     setTimeout(() => {
       teaser.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -118,38 +120,58 @@ function getIssueCount(risk) {
   return 1;
 }
 
-// Subline: urgentie via days_left + concrete probleemtelling
-function buildSubline(issueCount, daysLeft, risk) {
-  const issueStr = issueCount === 1
-    ? '1 mögliches Problem gefunden'
-    : `${issueCount} mögliche Probleme gefunden`;
-
+// Subline: puur deadline-urgentie, issues staan al in de kop
+function buildSubline(daysLeft, risk) {
+  if (daysLeft !== null && daysLeft <= 3) {
+    return `⏳ Noch ${daysLeft} Tage bis zur Frist — handle jetzt.`;
+  }
   if (daysLeft !== null && daysLeft <= 7) {
-    return `⚠️ ${issueStr} — noch ${daysLeft} Tage bis zur Frist. Jetzt prüfen.`;
+    return `⏳ Noch ${daysLeft} Tage bis zur Frist. Vollständige Prüfung empfohlen.`;
   }
   if (daysLeft !== null && daysLeft <= 14) {
-    return `${issueStr} — Frist in ${daysLeft} Tagen. Lohnt sich zu prüfen.`;
+    return `⏳ Frist in ${daysLeft} Tagen. Lohnt sich zu prüfen.`;
   }
   if (risk === 'high') {
-    return `⚠️ ${issueStr} — diese Forderung sollte dringend geprüft werden.`;
+    return 'Diese Forderung weist mehrere Auffälligkeiten auf.';
   }
-  return `${issueStr} — vollständige Analyse empfohlen.`;
+  return 'Vollständige Analyse empfohlen.';
 }
 
-// Locked tekst: concreet maken wat de gebruiker krijgt na betaling
-function buildLockedText(issueCount, company, amount) {
-  const issueStr = issueCount === 1
-    ? '1 möglichen Widerspruchsgrund'
-    : `${issueCount} mögliche Widerspruchsgründe`;
+// Locked tekst: bulletpoints met issue-hints + wat je na betaling krijgt
+function buildLockedText(issueCount, company, amount, risk) {
+  const amountStr = amount ? ` (${amount})` : '';
 
-  const amountStr = amount ? ` über ${amount}` : '';
+  // Issue-hints op basis van risk — bewust vaag genoeg om nieuwsgierigheid te wekken
+  const hints = getIssueHints(risk);
+  const bulletItems = hints.map(h => `<li>${h}</li>`).join('');
 
   return `
-    <strong>Vollständige Analyse nach Zahlung</strong>
-    Wir haben bei dieser Forderung von ${company}${amountStr} ${issueStr} identifiziert.
-    Nach der Zahlung erhältst du die vollständige Erklärung, eine Einschätzung deiner Chancen
-    und einen fertigen Widerspruchsbrief — bis morgen 16:00 Uhr per E-Mail.
+    <strong>${issueCount === 1 ? '1 möglicher Widerspruchsgrund' : `${issueCount} mögliche Widerspruchsgründe`} bei ${company}${amountStr}:</strong>
+    <ul style="margin:8px 0 10px 0;padding-left:16px;font-size:0.82rem;color:var(--muted);line-height:1.7;">
+      ${bulletItems}
+    </ul>
+    <span style="font-size:0.82rem;color:var(--muted);">Vollständige Erklärung, Einschätzung deiner Chancen und fertiger Widerspruch — bis morgen 16:00 Uhr per E-Mail.</span>
   `;
+}
+
+// Vage maar herkenbare issue-hints per risico-niveau
+function getIssueHints(risk) {
+  if (risk === 'high') {
+    return [
+      'Inkassokosten möglicherweise nicht zulässig',
+      'Forderung könnte verjährt sein',
+      'Fehlende Nachweise für die Hauptforderung',
+    ];
+  }
+  if (risk === 'medium') {
+    return [
+      'Inkassokosten möglicherweise zu hoch',
+      'Frist oder Vertragsgrundlage unklar',
+    ];
+  }
+  return [
+    'Ein Punkt verdient genauere Prüfung',
+  ];
 }
 
 function formatEuro(value) {
