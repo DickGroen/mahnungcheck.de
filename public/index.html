@@ -4,7 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mahnung prüfen lassen | Mahnung Check DE</title>
-  <meta name="description" content="Lade deine Mahnung hoch und erhalte sofort eine erste Einschätzung. Vollständige Analyse + fertiger Widerspruch innerhalb von 24 Stunden. Einmalig €49.">
+  <meta name="description" content="Lade deine Mahnung hoch und erhalte eine erste Einschätzung. Vollständige Analyse + fertiger Widerspruch bis morgen 16:00 Uhr. Einmalig €49.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 
@@ -35,12 +38,12 @@
 
     <p class="hero__sub" style="text-align:center;margin-left:auto;margin-right:auto;">
       Viele Mahnungen enthalten Fehler oder überhöhte Kosten.
-      Lade dein Schreiben hoch und erhalte innerhalb von 24 Stunden eine vollständige Analyse sowie einen fertigen Widerspruch per E-Mail.
+      Lade dein Schreiben hoch und erhalte bis morgen 16:00 Uhr eine vollständige Analyse sowie einen fertigen Widerspruch per E-Mail.
     </p>
 
     <!-- VALUE STRIP -->
     <div class="value-strip">
-      <span class="value-item"><span class="vi-check">✔</span> Analyse + Widerspruch innerhalb von 24 Stunden</span>
+      <span class="value-item"><span class="vi-check">✔</span> Analyse + Widerspruch bis morgen 16:00 Uhr</span>
       <span class="value-item"><span class="vi-check">✔</span> Per E-Mail — kein Konto erforderlich</span>
       <span class="value-item"><span class="vi-check">✔</span> Einmalig €49 · kein Abo</span>
       <span class="value-item"><span class="vi-check">✔</span> Dokument wird nach Verarbeitung gelöscht</span>
@@ -49,14 +52,32 @@
     <!-- TWEE OPTIES -->
     <div class="optie-grid">
 
-      <!-- OPTIE 1: GRATIS -->
+      <!-- OPTIE 1: BETAALD (primair) -->
+      <div class="optie-card optie-card--betaald">
+        <div class="optie-badge optie-badge--betaald">Empfohlen</div>
+        <h3 class="optie-title">Vollständige Analyse</h3>
+        <p class="optie-desc">Erhalte die vollständige Analyse mit einem fertigen Widerspruchsbrief — direkt verwendbar, bis morgen 16:00 Uhr per E-Mail.</p>
+        <ul class="optie-list">
+          <li>✓ Vollständige Analyse aller Widerspruchsgründe</li>
+          <li>✓ Einschätzung deiner Chancen</li>
+          <li>✓ Fertiger Widerspruchsbrief</li>
+          <li>✓ Konkrete nächste Schritte</li>
+          <li>✓ Ergebnis bis morgen 16:00 Uhr</li>
+        </ul>
+        <div class="optie-price">€49 <span>einmalig · kein Abo</span></div>
+        <a href="https://buy.stripe.com/test_cNidRa6Pidv99dYbJW14401" class="optie-btn optie-btn--betaald">
+          Jetzt zahlen und Analyse starten →
+        </a>
+        <p class="optie-security">🔒 Sichere Zahlung über Stripe</p>
+      </div>
+
+      <!-- OPTIE 2: GRATIS (secundair) -->
       <div class="optie-card optie-card--gratis">
         <div class="optie-badge optie-badge--gratis">Kostenlos</div>
         <h3 class="optie-title">Erste Einschätzung</h3>
-        <p class="optie-desc">Lade dein Schreiben hoch und erhalte noch heute eine kostenlose Ersteinschätzung — inklusive geschätztem Betrag, der möglicherweise nicht berechtigt ist.</p>
+        <p class="optie-desc">Noch unsicher? Lade dein Schreiben hoch und erhalte eine kostenlose Ersteinschätzung per E-Mail.</p>
         <ul class="optie-list">
           <li>✓ Absender und Betrag erkannt</li>
-          <li>✓ Geschätzter rückforderungsfähiger Betrag</li>
           <li>✓ Erste Risikoeinschätzung</li>
           <li>✓ Per E-Mail — innerhalb von 90 Minuten (Geschäftszeiten)</li>
         </ul>
@@ -73,25 +94,6 @@
           Kostenlose Einschätzung anfordern
         </button>
         <div class="optie-status" id="gratis-status"></div>
-      </div>
-
-      <!-- OPTIE 2: BETAALD -->
-      <div class="optie-card optie-card--betaald">
-        <div class="optie-badge optie-badge--betaald">Vollständig</div>
-        <h3 class="optie-title">Vollständige Analyse</h3>
-        <p class="optie-desc">Erhalte die vollständige Analyse mit einem fertigen Widerspruchsbrief — direkt verwendbar, innerhalb von 24 Stunden.</p>
-        <ul class="optie-list">
-          <li>✓ Vollständige Analyse aller Widerspruchsgründe</li>
-          <li>✓ Einschätzung deiner Chancen</li>
-          <li>✓ Fertiger Widerspruchsbrief</li>
-          <li>✓ Konkrete nächste Schritte</li>
-          <li>✓ Ergebnis innerhalb von 24 Stunden</li>
-        </ul>
-        <div class="optie-price">€49 <span>einmalig · kein Abo</span></div>
-        <a href="https://buy.stripe.com/test_cNidRa6Pidv99dYbJW14401" class="optie-btn optie-btn--betaald">
-          Jetzt zahlen und Analyse starten →
-        </a>
-        <p class="optie-security">🔒 Sichere Zahlung über Stripe</p>
       </div>
 
     </div>
@@ -115,14 +117,14 @@
       </div>
       <div class="teaser__body">
         <div class="teaser__found" id="teaser-found">Gut. Das passiert jetzt:</div>
-        <div class="teaser__sub" id="teaser-sub">Dein Schreiben wurde erkannt. Klicke unten, um deine Analyse anzufordern — Ergebnis bis morgen 17:00 Uhr.</div>
+        <div class="teaser__sub" id="teaser-sub">Dein Schreiben wurde erkannt. Klicke unten, um deine Analyse anzufordern — Ergebnis bis morgen 16:00 Uhr.</div>
         <div class="teaser__locked">
           <div class="lock-icon">
             <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           </div>
           <div class="teaser__locked-text" id="teaser-locked-text">
             <strong>Vollständige Analyse nach Zahlung</strong>
-            Widerspruchsgründe, Einschätzung und fertiger Widerspruch — innerhalb von 24 Stunden per E-Mail.
+            Widerspruchsgründe, Einschätzung und fertiger Widerspruch — bis morgen 16:00 Uhr per E-Mail.
           </div>
         </div>
       </div>
@@ -131,7 +133,7 @@
     <!-- CTA -->
     <div class="cta-wrap">
       <button class="cta-main" onclick="openModal()">
-        Mahnung prüfen — €49 · Ergebnis innerhalb von 24 Stunden
+        Mahnung prüfen — €49 · Ergebnis bis morgen 16:00 Uhr
       </button>
       <div class="cta-sub">Einmalige Zahlung · kein Abo · 🔒 Sichere Zahlung über Stripe</div>
     </div>
@@ -158,7 +160,7 @@
       <div class="step">
         <div class="step__num">03</div>
         <div class="step__title">Ergebnis per E-Mail</div>
-        <div class="step__desc">Spätestens innerhalb von 24 Stunden erhältst du deine Analyse sowie einen fertigen Widerspruch per E-Mail. Direkt verwendbar.</div>
+        <div class="step__desc">Bis morgen 16:00 Uhr erhältst du deine Analyse sowie einen fertigen Widerspruch per E-Mail. Direkt verwendbar.</div>
       </div>
     </div>
   </div>
@@ -209,18 +211,18 @@
     <h2>Was andere Nutzer sagen</h2>
     <div class="reviews">
       <div class="review">
-        <div class="stars">★★★★★</div>
+        <div class="review__text">&ldquo;Intrum wollte &euro;340 von mir &mdash; laut Analyse war die Forderung verj&auml;hrt. Widerspruch eingelegt, seitdem nichts mehr geh&ouml;rt.&rdquo;</div>
         <div class="review__text">"Ich hatte schon beschlossen zu zahlen. Am Ende stellte sich heraus, dass die Forderung verjährt war. Sehr froh, dass ich das vorher prüfen ließ."</div>
         <div class="review__author">Markus V. — Berlin</div>
       </div>
       <div class="review">
         <div class="stars">★★★★★</div>
-        <div class="review__text">"Der Bericht war am nächsten Morgen in meinem Postfach. Klar, verständlich und den Widerspruch konnte ich sofort verwenden."</div>
+        <div class="review__text">&ldquo;Die Inkassokosten waren fast doppelt so hoch wie erlaubt. Der fertige Widerspruch war am n&auml;chsten Morgen in meinem Postfach &mdash; direkt abgeschickt.&rdquo;</div>
         <div class="review__author">Fatima E. — Hamburg</div>
       </div>
       <div class="review">
         <div class="stars">★★★★★</div>
-        <div class="review__text">"Die Inkassokosten waren zu hoch berechnet. Auf Basis des Berichts habe ich Widerspruch eingelegt — und Recht bekommen."</div>
+        <div class="review__text">&ldquo;EOS hatte keinen Nachweis f&uuml;r die urspr&uuml;ngliche Mahnung. Das fiel mir selbst nicht auf &mdash; stand aber klar im Bericht. Forderung wurde fallen gelassen.&rdquo;</div>
         <div class="review__author">Thomas K. — München</div>
       </div>
     </div>
@@ -232,7 +234,7 @@
   <div class="container" style="text-align:center;">
     <p style="font-size:1rem;color:var(--ink-3);margin-bottom:16px;font-weight:500;">Lieber nicht zahlen, wenn es nicht nötig ist? Lass dein Schreiben prüfen.</p>
     <button class="cta-main" style="max-width:480px;margin:0 auto;" onclick="openModal()">
-      Mahnung prüfen — €49 · Ergebnis innerhalb von 24 Stunden
+      Mahnung prüfen — €49 · Ergebnis bis morgen 16:00 Uhr
     </button>
   </div>
 </section>
@@ -249,7 +251,7 @@
           Wie reiche ich mein Schreiben nach der Zahlung ein?
           <svg class="faq-chevron" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
-        <div class="faq-a">Nach der Zahlung lädst du dein Schreiben direkt auf der Bestätigungsseite hoch. Das dauert weniger als 2 Minuten. Deine Analyse und deinen Widerspruch erhältst du bis morgen 17:00 Uhr per E-Mail.</div>
+        <div class="faq-a">Nach der Zahlung lädst du dein Schreiben direkt auf der Bestätigungsseite hoch. Das dauert weniger als 2 Minuten. Deine Analyse und deinen Widerspruch erhältst du bis morgen 16:00 Uhr per E-Mail.</div>
       </div>
 
       <div class="faq-item">
@@ -307,7 +309,7 @@
 <div class="sticky-footer" id="sticky-footer">
   <div>
     <div class="sticky-footer__text">Zahlst du diese Mahnung zu Unrecht?</div>
-    <div class="sticky-footer__sub">Ergebnis innerhalb von 24 Stunden · einmalig €49</div>
+    <div class="sticky-footer__sub">Ergebnis bis morgen 16:00 Uhr · einmalig €49</div>
   </div>
   <button class="sticky-cta" onclick="openModal()">Mahnung prüfen — €49 →</button>
 </div>
@@ -317,8 +319,8 @@
   <div class="modal">
     <div class="modal__header">
       <div class="modal__eyebrow">Was du erhältst</div>
-      <div class="modal__title">Analyse + Widerspruch innerhalb von 24 Stunden</div>
-      <div class="modal__sub">Nach der Zahlung reichst du dein Schreiben ein. Wir analysieren es und senden dir das Ergebnis per E-Mail.</div>
+      <div class="modal__title">Analyse + Widerspruch bis morgen 16:00 Uhr</div>
+      <div class="modal__sub">Nach der Zahlung reichst du dein Schreiben ein. Wir analysieren es und senden dir das Ergebnis bis morgen 16:00 Uhr per E-Mail.</div>
       <div class="modal__price">€49 <span style="font-size:1rem;color:#9CA3AF;font-weight:400;">einmalig · kein Abo</span></div>
     </div>
     <div class="modal__body">
@@ -336,15 +338,15 @@
       </div>
       <div class="modal__feature">
         <div class="check">✓</div>
-        <div>Klare nächste Schritte in verständlicher Sprache</div>
+        <div>Ergebnis bis morgen 16:00 Uhr</div>
       </div>
       <div class="modal__disclaimer">
-        ℹ️ Dies ist eine informative Analyse, keine Rechtsberatung. Du erhältst dein Ergebnis innerhalb von 24 Stunden nach Einreichung deines Schreibens.
+        ℹ️ Dies ist eine informative Analyse, keine Rechtsberatung. Ein Widerspruch setzt die Zahlung nicht automatisch aus.
       </div>
       <p id="modal-dynamic-copy" style="margin-bottom:16px;color:#6b7a90;font-size:0.9rem;">
         Wir haben bereits erste Hinweise erkannt. Die vollständige Prüfung folgt nach der Zahlung.
       </p>
-      <a href="https://buy.stripe.com/JOUW_LIVE_LINK" class="modal__cta">
+      <a href="https://buy.stripe.com/test_cNidRa6Pidv99dYbJW14401" class="modal__cta">
         €49 zahlen und Analyse erhalten →
       </a>
       <div class="modal__security">🔒 Sichere Zahlung über Stripe · SEPA-Lastschrift verfügbar</div>
