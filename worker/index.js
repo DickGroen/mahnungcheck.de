@@ -207,7 +207,7 @@ async function generateAnalysis(env, { fileBase64, mediaType, route }) {
   return raw || "";
 }
 
-// ── Gedeelde mail HTML helper ─────────────────────────────────────────────────
+// ── Mail HTML helpers ─────────────────────────────────────────────────────────
 
 function buildGratisMailHtml({ name, company, amount_claimed, amount_recoverable, risk, teaser, stripeLink }) {
   const riskLabel = { low: "Niedrig", medium: "Mittel", high: "Hoch" }[risk] || risk;
@@ -244,6 +244,54 @@ function buildGratisMailHtml({ name, company, amount_claimed, amount_recoverable
       <p style="color:#6b7280;font-size:0.85rem;margin-top:32px;">
         Hinweis: Dies ist eine informative Ersteinschätzung und keine Rechtsberatung.
         Bei komplexen Situationen empfehlen wir, einen Anwalt oder die Verbraucherzentrale zu kontaktieren.
+      </p>
+    </div>
+  `;
+}
+
+function buildPaidCustomerMailHtml({ name, analysis, triage }) {
+  const title = extractTaggedSection(analysis, "TITLE") || "Deine Mahnung-Analyse";
+  const summary = extractTaggedSection(analysis, "SUMMARY");
+  const issues = extractTaggedSection(analysis, "ISSUES");
+  const assessment = extractTaggedSection(analysis, "ASSESSMENT");
+  const nextSteps = extractTaggedSection(analysis, "NEXT_STEPS");
+  const objection = extractTaggedSection(analysis, "OBJECTION");
+
+  const issueLines = String(issues || "").split("\n").map(l => l.trim()).filter(Boolean)
+    .map(l => `<li style="margin-bottom:6px;">${escapeHtml(l.replace(/^- /, ""))}</li>`)
+    .join("");
+
+  const nextLines = String(nextSteps || "").split("\n").map(l => l.trim()).filter(Boolean)
+    .map(l => `<li style="margin-bottom:6px;">${escapeHtml(l.replace(/^- /, ""))}</li>`)
+    .join("");
+
+  return `
+    <div style="font-family:Arial,sans-serif;max-width:640px;margin:0 auto;color:#1f2937;">
+      <h2 style="color:#1d3a6e;">${escapeHtml(title)}</h2>
+      <p>Hallo ${escapeHtml(name)},</p>
+      <p>hier ist deine vollständige Analyse deines Schreibens von
+        <strong>${escapeHtml(triage?.company || "unbekanntem Absender")}</strong>.
+      </p>
+
+      <h3 style="color:#1d3a6e;margin-top:24px;">Zusammenfassung</h3>
+      <p style="line-height:1.7;">${escapeHtml(summary)}</p>
+
+      <h3 style="color:#1d3a6e;margin-top:24px;">Mögliche Problempunkte</h3>
+      <ul style="padding-left:20px;line-height:1.7;">${issueLines}</ul>
+
+      <h3 style="color:#1d3a6e;margin-top:24px;">Einschätzung</h3>
+      <p style="line-height:1.7;">${escapeHtml(assessment)}</p>
+
+      <h3 style="color:#1d3a6e;margin-top:24px;">Nächste Schritte</h3>
+      <ul style="padding-left:20px;line-height:1.7;">${nextLines}</ul>
+
+      <h3 style="color:#b91c1c;margin-top:24px;">Widerspruchsbrief</h3>
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:20px 24px;white-space:pre-wrap;font-size:0.9rem;line-height:1.8;">${escapeHtml(objection)}</div>
+
+      <p style="color:#6b7280;font-size:0.82rem;margin-top:32px;border-top:1px solid #e5e7eb;padding-top:16px;">
+        Hinweis: Dies ist eine informative Analyse und keine Rechtsberatung.
+        Ein Widerspruch setzt die Zahlung nicht automatisch aus.
+        Bei komplexen Situationen oder hohen Beträgen empfehlen wir, einen Anwalt oder die Verbraucherzentrale zu konsultieren.
       </p>
     </div>
   `;
@@ -287,6 +335,42 @@ async function sendAdminGratisNotification(env, { name, email, gratis, stripeLin
   }
 }
 
+async function sendAdminPaidNotification(env, { customerName, customerEmail, triage, analysis }) {
+  const rtfContent = maakRtf(analysis, customerName, customerEmail, triage);
+  const rtfBase64 = rtfToBase64(rtfContent);
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: "Mahnung Check DE <noreply@mahnungcheck.de>",
+      to: ["dickgroen2@gmail.com"],
+      reply_to: [customerEmail],
+      subject: `Neue bezahlte Analyse: ${customerName || "Unbekannt"} (${customerEmail || "keine Mail"})`,
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:720px;margin:0 auto;">
+          <p style="background:#f3f4f6;padding:10px 14px;border-radius:6px;font-size:0.85rem;color:#6b7280;">
+            📬 Klantmail wordt morgen om 15:00 verstuurd naar <strong>${escapeHtml(customerEmail)}</strong>
+          </p>
+          <h2>Neue bezahlte Mahnung-Analyse</h2>
+          <p><strong>Name:</strong> ${escapeHtml(customerName || "")}</p>
+          <p><strong>E-Mail:</strong> ${escapeHtml(customerEmail || "")}</p>
+          <p><strong>Unternehmen:</strong> ${escapeHtml(triage?.company || "unbekannt")}</p>
+          <p><strong>Betrag:</strong> ${triage?.amount ? `€ ${triage.amount}` : "unbekannt"}</p>
+          <p><strong>Risiko:</strong> ${escapeHtml(triage?.risk || "")}</p>
+          <p style="color:#6b7280;font-size:0.9rem;">Vollständige Analyse als RTF-Datei angehängt.</p>
+        </div>
+      `,
+      attachments: [{ filename: "Mahnung-Analyse.rtf", content: rtfBase64 }]
+    })
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Admin-Mail fehlgeschlagen: ${err}`);
+  }
+}
+
 async function sendDelayedGratisEmail(env, entry) {
   const html = buildGratisMailHtml({
     name: entry.name,
@@ -311,39 +395,31 @@ async function sendDelayedGratisEmail(env, entry) {
 
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`Vertraagde mail mislukt voor ${entry.email}: ${err}`);
+    throw new Error(`Vertraagde gratis mail mislukt voor ${entry.email}: ${err}`);
   }
 }
 
-async function sendAdminEmail(env, { customerName, customerEmail, triage, analysis }) {
-  const rtfContent = maakRtf(analysis, customerName, customerEmail, triage);
-  const rtfBase64 = rtfToBase64(rtfContent);
+async function sendDelayedPaidEmail(env, entry) {
+  const html = buildPaidCustomerMailHtml({
+    name: entry.name,
+    analysis: entry.analysis,
+    triage: entry.triage
+  });
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { "Authorization": `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       from: "Mahnung Check DE <noreply@mahnungcheck.de>",
-      to: ["dickgroen2@gmail.com"],
-      reply_to: [customerEmail],
-      subject: `Neue Analyse: ${customerName || "Unbekannt"} (${customerEmail || "keine Mail"})`,
-      html: `
-        <div style="font-family:Arial,sans-serif;max-width:720px;margin:0 auto;">
-          <h2>Neue Mahnung-Analyse</h2>
-          <p><strong>Name:</strong> ${escapeHtml(customerName || "")}</p>
-          <p><strong>E-Mail:</strong> ${escapeHtml(customerEmail || "")}</p>
-          <p><strong>Unternehmen:</strong> ${escapeHtml(triage?.company || "unbekannt")}</p>
-          <p><strong>Betrag:</strong> ${triage?.amount ? `€ ${triage.amount}` : "unbekannt"}</p>
-          <p><strong>Risiko:</strong> ${escapeHtml(triage?.risk || "")}</p>
-          <p style="color:#6b7280;font-size:0.9rem;">Vollständige Analyse als RTF-Datei angehängt.</p>
-        </div>
-      `,
-      attachments: [{ filename: "Mahnung-Analyse.rtf", content: rtfBase64 }]
+      to: [entry.email],
+      subject: "Deine vollständige Mahnung-Analyse – Mahnung Check DE",
+      html
     })
   });
+
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`Admin-Mail fehlgeschlagen: ${err}`);
+    throw new Error(`Vertraagde betaalde mail mislukt voor ${entry.email}: ${err}`);
   }
 }
 
@@ -361,7 +437,13 @@ async function handleCron(env) {
       const entry = JSON.parse(raw);
       const createdAt = new Date(entry.created_at).getTime();
       if (now - createdAt < oneDayMs) continue;
-      await sendDelayedGratisEmail(env, entry);
+
+      if (entry.type === "paid") {
+        await sendDelayedPaidEmail(env, entry);
+      } else {
+        await sendDelayedGratisEmail(env, entry);
+      }
+
       await env.MAHNUNG_QUEUE.delete(key.name);
     } catch (err) {
       console.error(`Cron fout voor ${key.name}:`, err.message);
@@ -415,6 +497,7 @@ export default {
         // Opslaan in KV — klantmail volgt volgende werkdag om 15:00
         const kvKey = `gratis:${Date.now()}:${email}`;
         await env.MAHNUNG_QUEUE.put(kvKey, JSON.stringify({
+          type: "gratis",
           name, email,
           company: gratis.company || "",
           amount_claimed: String(gratis.amount_claimed || ""),
@@ -425,7 +508,7 @@ export default {
           created_at: new Date().toISOString()
         }));
 
-        // Admin notificatie direct — zelfde stijl als klantmail
+        // Admin notificatie direct
         try {
           await sendAdminGratisNotification(env, { name, email, gratis, stripeLink });
         } catch (_) {}
@@ -455,13 +538,24 @@ export default {
           fileBase64: base64, mediaType, route: triage.route
         });
 
-        await sendAdminEmail(env, {
+        // Opslaan in KV — klantmail volgt volgende werkdag om 15:00
+        const kvKey = `paid:${Date.now()}:${email}`;
+        await env.MAHNUNG_QUEUE.put(kvKey, JSON.stringify({
+          type: "paid",
+          name, email,
+          analysis,
+          triage,
+          created_at: new Date().toISOString()
+        }));
+
+        // Admin krijgt analyse direct met RTF
+        await sendAdminPaidNotification(env, {
           customerName: name, customerEmail: email, triage, analysis
         });
 
         return jsonResponse({
           ok: true,
-          message: "Upload erfolgreich. Die Analyse wird per E-Mail gesendet."
+          message: "Upload erfolgreich. Du erhältst deine vollständige Analyse spätestens am nächsten Werktag vor 16:00 Uhr per E-Mail."
         });
       } catch (err) {
         return jsonResponse({ ok: false, error: err.message }, 500);
