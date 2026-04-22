@@ -1,10 +1,6 @@
-var __defProp = Object.defineProperty;
-var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-
-// worker/triage.js
-import TRIAGE_PROMPT from "./abb86ccfdf7f5f9185ae0f2e7ce697c419834129-triage.txt";
-import HAIKU_PROMPT from "./0d964c7399ac46462d6c7e86d0cdbe73b3891269-haiku.txt";
-import SONNET_PROMPT from "./75a6f5cb02bea21f2638503b183c582110b7d384-sonnet.txt";
+import TRIAGE_PROMPT from '../prompts/triage.js';
+import HAIKU_PROMPT from '../prompts/haiku.js';
+import SONNET_PROMPT from '../prompts/sonnet.js';
 
 const GRATIS_PROMPT = `Du bist ein Analyse-System für Mahnungen und Inkassoschreiben in Deutschland.
 
@@ -36,7 +32,8 @@ Schreibe genau 1 Satz: Nenne NUR dass möglicherweise ein Betrag zurückgehalten
 Nenne KEINE Gründe, KEINE Paragraphen, KEINE Details.
 [/TEASER]`;
 
-// worker/claude.js
+// ── Claude API ────────────────────────────────────────────────────────────────
+
 async function callClaudeDocument(env, { model, maxTokens, prompt, fileBase64, mediaType }) {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -62,24 +59,19 @@ async function callClaudeDocument(env, { model, maxTokens, prompt, fileBase64, m
     })
   });
   const data = await res.json();
-  if (!res.ok) {
-    throw new Error(`Claude API Fehler: ${JSON.stringify(data)}`);
-  }
+  if (!res.ok) throw new Error(`Claude API Fehler: ${JSON.stringify(data)}`);
   return data?.content?.[0]?.text || "";
 }
-__name(callClaudeDocument, "callClaudeDocument");
 
-// worker/utils.js
+// ── Utils ─────────────────────────────────────────────────────────────────────
+
 async function fileToBase64(file) {
   const buffer = await file.arrayBuffer();
   const bytes = new Uint8Array(buffer);
   let binary = "";
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
+  for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
   return { base64: btoa(binary), mediaType: file.type || "application/pdf" };
 }
-__name(fileToBase64, "fileToBase64");
 
 function safeJsonParse(str) {
   try {
@@ -87,7 +79,6 @@ function safeJsonParse(str) {
     return match ? JSON.parse(match[0]) : null;
   } catch { return null; }
 }
-__name(safeJsonParse, "safeJsonParse");
 
 function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -95,7 +86,6 @@ function jsonResponse(data, status = 200) {
     headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
   });
 }
-__name(jsonResponse, "jsonResponse");
 
 function validateUploadInput({ file, name, email }) {
   if (!file) return "Keine Datei empfangen";
@@ -103,7 +93,6 @@ function validateUploadInput({ file, name, email }) {
   if (!email || !String(email).includes("@")) return "Ungültige E-Mail-Adresse";
   return null;
 }
-__name(validateUploadInput, "validateUploadInput");
 
 function extractTaggedSection(text, tag) {
   const start = `[${tag}]`;
@@ -113,23 +102,15 @@ function extractTaggedSection(text, tag) {
   if (startIndex === -1 || endIndex === -1) return "";
   return text.substring(startIndex + start.length, endIndex).trim();
 }
-__name(extractTaggedSection, "extractTaggedSection");
 
 function escapeHtml(str) {
   return String(str || "")
     .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 }
-__name(escapeHtml, "escapeHtml");
 
-function bulletsToHtml(text) {
-  return String(text || "").split("\n").map(l => l.trim()).filter(Boolean)
-    .map(l => l.replace(/^- /, "").trim())
-    .map(l => `<li>${escapeHtml(l)}</li>`).join("");
-}
-__name(bulletsToHtml, "bulletsToHtml");
+// ── RTF ───────────────────────────────────────────────────────────────────────
 
-// RTF generator
 function rtfEscape(str) {
   return String(str || "")
     .replace(/\\/g, "\\\\").replace(/\{/g, "\\{").replace(/\}/g, "\\}")
@@ -184,25 +165,24 @@ function rtfToBase64(rtfString) {
   return btoa(binary);
 }
 
-// worker/triage.js
+// ── Handlers ──────────────────────────────────────────────────────────────────
+
 async function handleTriage(env, fileBase64, mediaType) {
   const raw = await callClaudeDocument(env, {
     model: "claude-haiku-4-5-20251001", maxTokens: 800,
     prompt: TRIAGE_PROMPT, fileBase64, mediaType
   });
   const parsed = safeJsonParse(raw);
-  if (!parsed) return { company: null, amount: null, days_left: null, risk: "medium", route: "HAIKU" };
+  if (!parsed) return { company: null, amount: null, days_left: null, risk: "medium", route: "SONNET" };
   return {
     company: parsed.company || null,
     amount: typeof parsed.amount === "number" ? parsed.amount : null,
     days_left: typeof parsed.days_left === "number" ? parsed.days_left : null,
     risk: parsed.risk || "medium",
-    route: parsed.route || "HAIKU"
+    route: parsed.route || "SONNET"
   };
 }
-__name(handleTriage, "handleTriage");
 
-// gratis analyse
 async function handleGratisAnalyse(env, fileBase64, mediaType) {
   const raw = await callClaudeDocument(env, {
     model: "claude-haiku-4-5-20251001", maxTokens: 600,
@@ -216,7 +196,6 @@ async function handleGratisAnalyse(env, fileBase64, mediaType) {
     teaser: extractTaggedSection(raw, "TEASER") || null
   };
 }
-__name(handleGratisAnalyse, "handleGratisAnalyse");
 
 async function generateAnalysis(env, { fileBase64, mediaType, route }) {
   const useSonnet = route === "SONNET";
@@ -226,13 +205,6 @@ async function generateAnalysis(env, { fileBase64, mediaType, route }) {
     model, maxTokens: useSonnet ? 3500 : 1800, prompt, fileBase64, mediaType
   });
   return raw || "";
-}
-__name(generateAnalysis, "generateAnalysis");
-
-// worker/mailer.js
-function formatEuro(amount) {
-  if (!amount || isNaN(amount)) return null;
-  return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(amount);
 }
 
 async function sendAdminEmail(env, { customerName, customerEmail, triage, analysis }) {
@@ -266,10 +238,10 @@ async function sendAdminEmail(env, { customerName, customerEmail, triage, analys
     throw new Error(`Admin-Mail fehlgeschlagen: ${err}`);
   }
 }
-__name(sendAdminEmail, "sendAdminEmail");
 
-// worker/index.js
-var index_default = {
+// ── Main fetch handler ────────────────────────────────────────────────────────
+
+export default {
   async fetch(request, env) {
     if (request.method === "OPTIONS") {
       return new Response(null, {
@@ -280,6 +252,7 @@ var index_default = {
         }
       });
     }
+
     const url = new URL(request.url);
 
     if (request.method === "POST" && url.pathname === "/analyze") {
@@ -373,4 +346,3 @@ var index_default = {
     return new Response("Not found", { status: 404 });
   }
 };
-export { index_default as default };
