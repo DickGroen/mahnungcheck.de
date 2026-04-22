@@ -207,7 +207,113 @@ async function generateAnalysis(env, { fileBase64, mediaType, route }) {
   return raw || "";
 }
 
+// ── Gedeelde mail HTML helper ─────────────────────────────────────────────────
+
+function buildGratisMailHtml({ name, company, amount_claimed, amount_recoverable, risk, teaser, stripeLink }) {
+  const riskLabel = { low: "Niedrig", medium: "Mittel", high: "Hoch" }[risk] || risk;
+  const amountClaimed = amount_claimed ? `€ ${parseFloat(amount_claimed).toFixed(2)}` : "unbekannt";
+  const amountRecoverable = amount_recoverable ? `€ ${parseFloat(amount_recoverable).toFixed(2)}` : null;
+
+  return `
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#1f2937;">
+      <h2 style="color:#1d3a6e;">Deine kostenlose Ersteinschätzung</h2>
+      <p>Hallo ${escapeHtml(name)},</p>
+      <p>wir haben dein Schreiben von <strong>${escapeHtml(company || "unbekanntem Absender")}</strong> analysiert.</p>
+      <table style="width:100%;border-collapse:collapse;margin:24px 0;">
+        <tr style="background:#f3f4f6;">
+          <td style="padding:10px 14px;font-weight:bold;">Geforderter Betrag</td>
+          <td style="padding:10px 14px;">${amountClaimed}</td>
+        </tr>
+        ${amountRecoverable ? `
+        <tr>
+          <td style="padding:10px 14px;font-weight:bold;">Möglicherweise nicht berechtigt</td>
+          <td style="padding:10px 14px;color:#b91c1c;font-weight:bold;">${amountRecoverable}</td>
+        </tr>` : ""}
+        <tr style="background:#f3f4f6;">
+          <td style="padding:10px 14px;font-weight:bold;">Risiko-Einschätzung</td>
+          <td style="padding:10px 14px;">${riskLabel}</td>
+        </tr>
+      </table>
+      <p style="background:#fef9c3;border-left:4px solid #eab308;padding:12px 16px;border-radius:4px;">
+        ${escapeHtml(teaser || "Teile der Forderung könnten möglicherweise nicht berechtigt sein.")}
+      </p>
+      <p>Für eine vollständige Analyse mit fertigem Widerspruchsbrief:</p>
+      <a href="${stripeLink}" style="display:inline-block;background:#1d3a6e;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold;margin:8px 0;">
+        Vollständige Analyse für €49 →
+      </a>
+      <p style="color:#6b7280;font-size:0.85rem;margin-top:32px;">
+        Hinweis: Dies ist eine informative Ersteinschätzung und keine Rechtsberatung.
+        Bei komplexen Situationen empfehlen wir, einen Anwalt oder die Verbraucherzentrale zu kontaktieren.
+      </p>
+    </div>
+  `;
+}
+
 // ── Mailers ───────────────────────────────────────────────────────────────────
+
+async function sendAdminGratisNotification(env, { name, email, gratis, stripeLink }) {
+  const html = buildGratisMailHtml({
+    name,
+    company: gratis.company,
+    amount_claimed: gratis.amount_claimed,
+    amount_recoverable: gratis.amount_recoverable,
+    risk: gratis.risk,
+    teaser: gratis.teaser,
+    stripeLink
+  });
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: "Mahnung Check DE <noreply@mahnungcheck.de>",
+      to: ["dickgroen2@gmail.com"],
+      reply_to: [email],
+      subject: `Neue Gratis-Anfrage: ${name} (${email})`,
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+          <p style="background:#f3f4f6;padding:10px 14px;border-radius:6px;font-size:0.85rem;color:#6b7280;">
+            📬 Klantmail wordt morgen om 15:00 verstuurd naar <strong>${escapeHtml(email)}</strong>
+          </p>
+          ${html}
+        </div>
+      `
+    })
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Admin-notificatie mislukt: ${err}`);
+  }
+}
+
+async function sendDelayedGratisEmail(env, entry) {
+  const html = buildGratisMailHtml({
+    name: entry.name,
+    company: entry.company,
+    amount_claimed: entry.amount_claimed,
+    amount_recoverable: entry.amount_recoverable,
+    risk: entry.risk,
+    teaser: entry.teaser,
+    stripeLink: entry.stripe_link || "https://mahnungcheck.de"
+  });
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: "Mahnung Check DE <noreply@mahnungcheck.de>",
+      to: [entry.email],
+      subject: "Deine kostenlose Ersteinschätzung – Mahnung Check DE",
+      html
+    })
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Vertraagde mail mislukt voor ${entry.email}: ${err}`);
+  }
+}
 
 async function sendAdminEmail(env, { customerName, customerEmail, triage, analysis }) {
   const rtfContent = maakRtf(analysis, customerName, customerEmail, triage);
@@ -219,7 +325,7 @@ async function sendAdminEmail(env, { customerName, customerEmail, triage, analys
     body: JSON.stringify({
       from: "Mahnung Check DE <noreply@mahnungcheck.de>",
       to: ["dickgroen2@gmail.com"],
-      reply_to: ["dickgroen2@gmail.com"],
+      reply_to: [customerEmail],
       subject: `Neue Analyse: ${customerName || "Unbekannt"} (${customerEmail || "keine Mail"})`,
       html: `
         <div style="font-family:Arial,sans-serif;max-width:720px;margin:0 auto;">
@@ -241,60 +347,7 @@ async function sendAdminEmail(env, { customerName, customerEmail, triage, analys
   }
 }
 
-async function sendDelayedGratisEmail(env, entry) {
-  const riskLabel = { low: "Niedrig", medium: "Mittel", high: "Hoch" }[entry.risk] || entry.risk;
-  const amountClaimed = entry.amount_claimed ? `€ ${parseFloat(entry.amount_claimed).toFixed(2)}` : "unbekannt";
-  const amountRecoverable = entry.amount_recoverable ? `€ ${parseFloat(entry.amount_recoverable).toFixed(2)}` : null;
-
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { "Authorization": `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from: "Mahnung Check DE <noreply@mahnungcheck.de>",
-      to: [entry.email],
-      subject: "Deine kostenlose Ersteinschätzung – Mahnung Check DE",
-      html: `
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#1f2937;">
-          <h2 style="color:#1d3a6e;">Deine kostenlose Ersteinschätzung</h2>
-          <p>Hallo ${escapeHtml(entry.name)},</p>
-          <p>wir haben dein Schreiben von <strong>${escapeHtml(entry.company || "unbekanntem Absender")}</strong> analysiert.</p>
-          <table style="width:100%;border-collapse:collapse;margin:24px 0;">
-            <tr style="background:#f3f4f6;">
-              <td style="padding:10px 14px;font-weight:bold;">Geforderter Betrag</td>
-              <td style="padding:10px 14px;">${amountClaimed}</td>
-            </tr>
-            ${amountRecoverable ? `
-            <tr>
-              <td style="padding:10px 14px;font-weight:bold;">Möglicherweise nicht berechtigt</td>
-              <td style="padding:10px 14px;color:#b91c1c;font-weight:bold;">${amountRecoverable}</td>
-            </tr>` : ""}
-            <tr style="background:#f3f4f6;">
-              <td style="padding:10px 14px;font-weight:bold;">Risiko-Einschätzung</td>
-              <td style="padding:10px 14px;">${riskLabel}</td>
-            </tr>
-          </table>
-          <p style="background:#fef9c3;border-left:4px solid #eab308;padding:12px 16px;border-radius:4px;">
-            ${escapeHtml(entry.teaser || "Teile der Forderung könnten möglicherweise nicht berechtigt sein.")}
-          </p>
-          <p>Für eine vollständige Analyse mit fertigem Widerspruchsbrief:</p>
-          <a href="${entry.stripe_link || "https://mahnungcheck.de"}" style="display:inline-block;background:#1d3a6e;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold;margin:8px 0;">
-            Vollständige Analyse für €49 →
-          </a>
-          <p style="color:#6b7280;font-size:0.85rem;margin-top:32px;">
-            Hinweis: Dies ist eine informative Ersteinschätzung und keine Rechtsberatung.
-          </p>
-        </div>
-      `
-    })
-  });
-
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Vertraagde mail mislukt voor ${entry.email}: ${err}`);
-  }
-}
-
-// ── Cron handler — elke werkdag om 13:00 UTC (= 15:00 CET) ───────────────────
+// ── Cron handler ──────────────────────────────────────────────────────────────
 
 async function handleCron(env) {
   const now = Date.now();
@@ -372,29 +425,9 @@ export default {
           created_at: new Date().toISOString()
         }));
 
-        // Admin notificatie direct
+        // Admin notificatie direct — zelfde stijl als klantmail
         try {
-          await fetch("https://api.resend.com/emails", {
-            method: "POST",
-            headers: { "Authorization": `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({
-              from: "Mahnung Check DE <noreply@mahnungcheck.de>",
-              to: ["dickgroen2@gmail.com"],
-              subject: `Neue Gratis-Anfrage: ${name} (${email})`,
-              html: `
-                <div style="font-family:Arial,sans-serif;">
-                  <h2>Neue kostenlose Ersteinschätzung eingegangen</h2>
-                  <p><strong>Name:</strong> ${escapeHtml(name)}</p>
-                  <p><strong>E-Mail:</strong> ${escapeHtml(email)}</p>
-                  <p><strong>Unternehmen:</strong> ${escapeHtml(gratis.company || "unbekannt")}</p>
-                  <p><strong>Betrag:</strong> ${gratis.amount_claimed ? `€ ${gratis.amount_claimed}` : "unbekannt"}</p>
-                  <p><strong>Risiko:</strong> ${escapeHtml(gratis.risk || "")}</p>
-                  <p><strong>Teaser:</strong> ${escapeHtml(gratis.teaser || "")}</p>
-                  <p style="color:#6b7280;font-size:0.9rem;">Klantmail wordt morgen om 15:00 verstuurd.</p>
-                </div>
-              `
-            })
-          });
+          await sendAdminGratisNotification(env, { name, email, gratis, stripeLink });
         } catch (_) {}
 
         return jsonResponse({
@@ -438,7 +471,6 @@ export default {
     return new Response("Not found", { status: 404 });
   },
 
-  // Cron — elke werkdag om 13:00 UTC (= 15:00 CET)
   async scheduled(event, env, ctx) {
     ctx.waitUntil(handleCron(env));
   }
