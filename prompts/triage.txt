@@ -33,11 +33,13 @@ Regeln:
 - low → wirkt formal korrekt, aber keine Garantie
 
 5. route:
-- SONNET wenn:
-  - Betrag > 500
-  - mehrere Unklarheiten
-  - rechtlich komplex
-- sonst HAIKU
+- Standardmäßig immer SONNET — der Nutzer zahlt €49 und erwartet eine gründliche Analyse
+- HAIKU nur wenn ALLE folgenden Bedingungen zutreffen:
+  - Betrag unter 100 €
+  - Forderung eindeutig und klar nachvollziehbar
+  - Keine rechtlichen Unklarheiten erkennbar
+  - Kein Zeitdruck (mehr als 14 Tage Frist)
+- Im Zweifel immer SONNET
 
 WICHTIG:
 - Nur JSON zurückgeben
