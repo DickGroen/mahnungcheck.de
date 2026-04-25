@@ -1,268 +1,179 @@
-const uploadZone = document.getElementById('upload-zone');
-const fileInput = document.getElementById('file-input');
-const teaser = document.getElementById('teaser');
-const teaserCompany = document.getElementById('teaser-company');
-const teaserFound = document.getElementById('teaser-found');
-const teaserSub = document.getElementById('teaser-sub');
-const teaserLockedText = document.getElementById('teaser-locked-text');
-const modal = document.getElementById('modal');
-const stickyFooter = document.getElementById('sticky-footer');
+// ── Teaser flow ───────────────────────────────────────────────────────────────
+// Called when user selects a file via the hidden #file-input
+// Runs triage → shows teaser section with result
 
-let latestTriage = null;
-let userHasInteracted = false; // sticky footer alleen na interactie
+async function handleFile(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
 
-if (uploadZone) {
-  uploadZone.addEventListener('dragover', e => {
-    e.preventDefault();
-    uploadZone.classList.add('drag-over');
-  });
-
-  uploadZone.addEventListener('dragleave', () => {
-    uploadZone.classList.remove('drag-over');
-  });
-
-  uploadZone.addEventListener('drop', e => {
-    e.preventDefault();
-    uploadZone.classList.remove('drag-over');
-    const file = e.dataTransfer.files[0];
-    if (file) processFile(file);
-  });
-}
-
-function handleFile(input) {
-  if (input.files && input.files[0]) {
-    userHasInteracted = true;
-    processFile(input.files[0]);
+  if (file.size > 10 * 1024 * 1024) {
+    showTeaserError('Bestand te groot. Maximaal 10 MB.');
+    return;
   }
-}
 
-async function processFile(file) {
-  uploadZone.innerHTML = `
-    <div class="upload-icon" style="border-color:var(--green);">
-      <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="var(--green)" stroke-width="2">
-        <polyline points="20 6 9 17 4 12"></polyline>
-      </svg>
-    </div>
-    <div class="upload-label" style="color:var(--green);">${escapeHtml(file.name)}</div>
-    <div class="upload-hint">Datei erkannt — erste Einschätzung wird geladen...</div>
-  `;
+  const teaser = document.getElementById('teaser');
+  const teaserCompany = document.getElementById('teaser-company');
+  const teaserFound = document.getElementById('teaser-found');
+  const teaserSub = document.getElementById('teaser-sub');
+  const teaserLocked = document.getElementById('teaser-locked-text');
+  const modalCopy = document.getElementById('modal-dynamic-copy');
 
-  teaser.classList.add('visible');
-  teaserCompany.textContent = 'Analyse läuft...';
-  teaserFound.textContent = 'Wir prüfen Absender, Betrag und mögliches Risiko.';
-  teaserSub.textContent = 'Bitte kurz warten...';
-  teaserLockedText.innerHTML = `
-    <strong>Vollständige Analyse nach Zahlung</strong>
-    Du erhältst eine detaillierte Einschätzung, mögliche Widerspruchsgründe und einen fertigen Widerspruch bis morgen 16:00 Uhr per E-Mail.
-  `;
+  // Ladezustand
+  teaser.style.display = 'block';
+  teaser.classList.remove('teaser--visible');
+  teaserCompany.textContent = 'Wird analysiert...';
+  teaserFound.textContent = '⏳ Einen Moment...';
+  teaserSub.textContent = 'Dein Schreiben wird geprüft.';
+
+  setTimeout(() => teaser.classList.add('teaser--visible'), 10);
 
   try {
     const formData = new FormData();
     formData.append('file', file);
 
-    const res = await fetch('/analyze', {
-      method: 'POST',
-      body: formData
-    });
-
+    const res = await fetch(`${WORKER_URL}/analyze`, { method: 'POST', body: formData });
     const data = await res.json();
 
-    if (!data.ok) {
-      throw new Error(data.error || 'Analyse fehlgeschlagen');
+    if (!data.ok) throw new Error(data.error || 'Analyse fehlgeschlagen');
+
+    const sender = data.sender || data.company || null;
+    const risk = data.risk || 'medium';
+    const claimAmount = data.claim_amount || null;
+
+    // Punt 4: bedrag prominent in titel
+    if (claimAmount) {
+      teaserCompany.textContent = `Möglicherweise €${claimAmount} zu viel gefordert`;
+    } else {
+      teaserCompany.textContent = sender ? `Schreiben von ${sender} erkannt` : 'Anfechtbare Forderung erkannt';
     }
 
-    latestTriage = data;
+    teaserFound.textContent = 'Erste Feststellung:';
 
-    const company = data.company || 'Unbekannter Absender';
-    const amount = typeof data.amount === 'number' ? formatEuro(data.amount) : null;
-    const daysLeft = typeof data.days_left === 'number' ? data.days_left : null;
-    const issueCount = getIssueCount(data.risk);
+    const riskMessages = {
+      high: '🔴 Starke Anzeichen für eine anfechtbare Forderung. Lass es jetzt vollständig prüfen.',
+      medium: '🟠 Mögliche Anfechtungspunkte gefunden. Eine vollständige Prüfung gibt Sicherheit.',
+      low: '🟡 Geringes Risiko — aber eine Prüfung kann Überraschungen aufdecken.'
+    };
+    teaserSub.textContent = riskMessages[risk] || 'Klicke unten für die vollständige Analyse.';
 
-    // Teaserkop: bedrijf + bedrag
-    teaserCompany.textContent = amount
-      ? `${company} — ${amount}`
-      : company;
+    if (teaserLocked) {
+      const betragText = claimAmount ? `€${claimAmount}` : 'die Forderung';
+      teaserLocked.innerHTML = `<strong>Vollständige Analyse nach Zahlung</strong>
+        Wir prüfen ${betragText} auf alle Anfechtungsgründe und erstellen einen fertigen Widerspruch — innerhalb von 24 Stunden.`;
+    }
 
-    // Hoofdregel: aantal gevonden problemen, direct en concreet
-    teaserFound.textContent = issueCount === 1
-      ? '⚠️ 1 mögliches Problem erkannt'
-      : `⚠️ ${issueCount} mögliche Probleme erkannt`;
-
-    // Subline: deadline urgentie
-    teaserSub.textContent = buildSubline(daysLeft, data.risk);
-
-    // Locked tekst: bulletpoints met concrete issues + CTA
-    teaserLockedText.innerHTML = buildLockedText(issueCount, company, amount, data.risk);
-
-    setTimeout(() => {
-      teaser.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }, 100);
-
-    // Modal NIET automatisch openen — gebruiker klikt zelf op CTA
+    if (modalCopy) {
+      if (claimAmount && sender) {
+        modalCopy.textContent = `Wir haben eine möglicherweise überhöhte Forderung von €${claimAmount} durch ${sender} erkannt. Die vollständige Prüfung folgt nach der Zahlung.`;
+      } else if (sender) {
+        modalCopy.textContent = `Wir haben ein Schreiben von ${sender} erkannt. Die vollständige Prüfung folgt nach der Zahlung.`;
+      } else {
+        modalCopy.textContent = 'Wir haben Anzeichen für eine anfechtbare Forderung erkannt. Die vollständige Prüfung folgt nach der Zahlung.';
+      }
+    }
 
   } catch (err) {
-    latestTriage = null;
+    teaserCompany.textContent = 'Schreiben erkannt';
+    teaserFound.textContent = 'Bereit zur Analyse:';
+    teaserSub.textContent = 'Klicke unten, um deine vollständige Analyse und deinen Widerspruch anzufordern.';
+    console.warn('Triage-Fehler:', err.message);
+  }
 
-    teaserCompany.textContent = 'Datei erkannt';
-    teaserFound.textContent = 'Wir konnten keine Live-Einschätzung laden.';
-    teaserSub.textContent = 'Du kannst trotzdem mit der vollständigen Analyse fortfahren.';
-    teaserLockedText.innerHTML = `
-      <strong>Vollständige Analyse nach Zahlung</strong>
-      Du erhältst eine detaillierte Einschätzung und einen fertigen Widerspruch bis morgen 16:00 Uhr per E-Mail.
-    `;
+  // Scroll to teaser
+  teaser.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function showTeaserError(msg) {
+  const teaser = document.getElementById('teaser');
+  if (teaser) {
+    teaser.style.display = 'block';
+    const sub = document.getElementById('teaser-sub');
+    if (sub) sub.textContent = msg;
   }
 }
 
-// Hoeveel mogelijke problemen suggereren we op basis van risk?
-function getIssueCount(risk) {
-  if (risk === 'high') return 3;
-  if (risk === 'medium') return 2;
-  return 1;
-}
-
-// Subline: puur deadline-urgentie, issues staan al in de kop
-function buildSubline(daysLeft, risk) {
-  if (daysLeft !== null && daysLeft <= 3) {
-    return `⏳ Noch ${daysLeft} Tage bis zur Frist — handle jetzt.`;
-  }
-  if (daysLeft !== null && daysLeft <= 7) {
-    return `⏳ Noch ${daysLeft} Tage bis zur Frist. Vollständige Prüfung empfohlen.`;
-  }
-  if (daysLeft !== null && daysLeft <= 14) {
-    return `⏳ Frist in ${daysLeft} Tagen. Lohnt sich zu prüfen.`;
-  }
-  if (risk === 'high') {
-    return 'Diese Forderung weist mehrere Auffälligkeiten auf.';
-  }
-  return 'Vollständige Analyse empfohlen.';
-}
-
-// Locked tekst: bulletpoints met issue-hints + wat je na betaling krijgt
-function buildLockedText(issueCount, company, amount, risk) {
-  const amountStr = amount ? ` (${amount})` : '';
-
-  // Issue-hints op basis van risk — bewust vaag genoeg om nieuwsgierigheid te wekken
-  const hints = getIssueHints(risk);
-  const bulletItems = hints.map(h => `<li>${h}</li>`).join('');
-
-  return `
-    <strong>${issueCount === 1 ? '1 möglicher Widerspruchsgrund' : `${issueCount} mögliche Widerspruchsgründe`} bei ${company}${amountStr}:</strong>
-    <ul style="margin:8px 0 10px 0;padding-left:16px;font-size:0.82rem;color:var(--muted);line-height:1.7;">
-      ${bulletItems}
-    </ul>
-    <span style="font-size:0.82rem;color:var(--muted);">Vollständige Erklärung, Einschätzung deiner Chancen und fertiger Widerspruch — bis morgen 16:00 Uhr per E-Mail.</span>
-  `;
-}
-
-// Vage maar herkenbare issue-hints per risico-niveau
-function getIssueHints(risk) {
-  if (risk === 'high') {
-    return [
-      'Inkassokosten möglicherweise nicht zulässig',
-      'Forderung könnte verjährt sein',
-      'Fehlende Nachweise für die Hauptforderung',
-    ];
-  }
-  if (risk === 'medium') {
-    return [
-      'Inkassokosten möglicherweise zu hoch',
-      'Frist oder Vertragsgrundlage unklar',
-    ];
-  }
-  return [
-    'Ein Punkt verdient genauere Prüfung',
-  ];
-}
-
-function formatEuro(value) {
-  return new Intl.NumberFormat('de-DE', {
-    style: 'currency',
-    currency: 'EUR'
-  }).format(value);
-}
-
-function escapeHtml(str) {
-  return String(str || '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
-}
-
-// Sticky footer: alleen tonen na interactie (upload) én voldoende scrollen
-window.addEventListener('scroll', () => {
-  if (!stickyFooter) return;
-  if (!userHasInteracted) return;
-
-  if (window.scrollY > 300) {
-    stickyFooter.classList.add('visible');
-  } else {
-    stickyFooter.classList.remove('visible');
-  }
-});
+// ── Modal ─────────────────────────────────────────────────────────────────────
 
 function openModal() {
-  if (!modal) return;
-
-  modal.classList.add('visible');
-  document.body.style.overflow = 'hidden';
-
-  const modalDynamic = document.getElementById('modal-dynamic-copy');
-
-  if (modalDynamic) {
-    if (latestTriage) {
-      const company = latestTriage.company || 'dem angegebenen Unternehmen';
-      const amount = typeof latestTriage.amount === 'number'
-        ? formatEuro(latestTriage.amount)
-        : null;
-      const issueCount = getIssueCount(latestTriage.risk);
-      const issueStr = issueCount === 1
-        ? '1 möglichen Widerspruchsgrund'
-        : `${issueCount} mögliche Widerspruchsgründe`;
-
-      modalDynamic.textContent = amount
-        ? `Wir haben bei der Forderung von ${company} (${amount}) ${issueStr} identifiziert. Die vollständige Prüfung folgt nach der Zahlung.`
-        : `Wir haben ${issueStr} identifiziert. Die vollständige Prüfung folgt nach der Zahlung.`;
-    } else {
-      modalDynamic.textContent = 'Wir haben bereits erste Hinweise erkannt. Die vollständige Prüfung folgt nach der Zahlung.';
-    }
+  const modal = document.getElementById('modal');
+  if (modal) {
+    modal.classList.add('modal--open');
+    document.body.style.overflow = 'hidden';
   }
 }
 
 function closeModal() {
-  if (!modal) return;
-  modal.classList.remove('visible');
-  document.body.style.overflow = '';
+  const modal = document.getElementById('modal');
+  if (modal) {
+    modal.classList.remove('modal--open');
+    document.body.style.overflow = '';
+  }
 }
 
-function closeModalOutside(e) {
-  if (e.target === modal) {
+function closeModalOutside(event) {
+  if (event.target === document.getElementById('modal')) {
     closeModal();
   }
 }
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    closeModal();
-  }
+  if (e.key === 'Escape') closeModal();
 });
+
+// ── FAQ accordion ─────────────────────────────────────────────────────────────
 
 function toggleFaq(el) {
   const item = el.closest('.faq-item');
-  const isOpen = item.classList.contains('open');
+  const answer = item.querySelector('.faq-a');
+  const chevron = item.querySelector('.faq-chevron');
+  const isOpen = item.classList.contains('faq-item--open');
 
-  document.querySelectorAll('.faq-item.open').forEach(i => {
-    i.classList.remove('open');
+  // Close all others
+  document.querySelectorAll('.faq-item--open').forEach(openItem => {
+    openItem.classList.remove('faq-item--open');
+    const a = openItem.querySelector('.faq-a');
+    const c = openItem.querySelector('.faq-chevron');
+    if (a) a.style.maxHeight = null;
+    if (c) c.style.transform = '';
   });
 
   if (!isOpen) {
-    item.classList.add('open');
+    item.classList.add('faq-item--open');
+    if (answer) answer.style.maxHeight = answer.scrollHeight + 'px';
+    if (chevron) chevron.style.transform = 'rotate(180deg)';
   }
 }
 
-window.handleFile = handleFile;
-window.openModal = openModal;
-window.closeModal = closeModal;
-window.closeModalOutside = closeModalOutside;
-window.toggleFaq = toggleFaq;
+// ── Sticky footer ─────────────────────────────────────────────────────────────
+
+(function initStickyFooter() {
+  const stickyFooter = document.getElementById('sticky-footer');
+  if (!stickyFooter) return;
+
+  let lastScrollY = window.scrollY;
+  let ticking = false;
+
+  function updateSticky() {
+    const scrollY = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight;
+    const windowHeight = window.innerHeight;
+    const nearBottom = scrollY + windowHeight > docHeight - 200;
+
+    if (scrollY > 400 && !nearBottom) {
+      stickyFooter.classList.add('sticky-footer--visible');
+    } else {
+      stickyFooter.classList.remove('sticky-footer--visible');
+    }
+
+    lastScrollY = scrollY;
+    ticking = false;
+  }
+
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(updateSticky);
+      ticking = true;
+    }
+  }, { passive: true });
+})();
+
